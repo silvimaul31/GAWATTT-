@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | Aide-Genie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-new-card {
+            animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #0f172a; 
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 0, 128, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(128, 0, 0, 0.2) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #f8fafc;
+        }
+        
+        .bg-navy { background-color: #000080; }
+        .bg-maroon { background-color: #800000; }
+        .login-bg { background: linear-gradient(135deg, #800000 0%, #000080 100%); }
+        
+        .admin-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(128, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="admin-login" class="fixed inset-0 z-[100] login-bg flex items-center justify-center p-6">
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-sm text-center">
+            <div class="text-5xl mb-6">🔐</div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Admin Control</h2>
+            <p class="text-xs text-slate-400 mb-8 font-bold uppercase tracking-widest">Authorized Personnel Only</p>
+            
+            <input type="password" id="pin-input" placeholder="****" maxlength="4"
+                class="w-full p-5 bg-slate-100 border-2 border-slate-100 rounded-3xl focus:outline-none focus:border-navy text-center text-4xl tracking-[0.5em] mb-6 font-bold text-slate-800 transition-all">
+            
+            <button onclick="checkPin()" class="w-full bg-navy text-white py-5 rounded-3xl font-black shadow-xl active:scale-95 transition-all mb-4">
+                AUTHENTICATE
+            </button>
+            <a href="index.html" class="block text-[10px] font-black text-slate-400 hover:text-maroon transition uppercase tracking-widest">← Back to App</a>
+        </div>
+    </div>
+
+    <div id="admin-content" style="display: none;">
+        <header class="bg-navy/80 backdrop-blur-md p-6 text-white flex justify-between items-center sticky top-0 z-50 border-b border-white/10">
+            <div class="flex items-center gap-4">
+                <div class="bg-maroon p-3 rounded-2xl text-2xl shadow-lg shadow-maroon/20">👩‍⚕️</div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tighter uppercase">Command Center</h1>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                        <p class="text-[9px] font-bold opacity-70 uppercase tracking-[0.2em]">Live Monitoring System</p>
+                    </div>
+                </div>
+            </div>
+            <a href="index.html" class="bg-white/5 px-5 py-2 rounded-xl text-[10px] font-black hover:bg-white/10 transition border border-white/10 uppercase tracking-widest">Exit</a>
+        </header>
+
+        <div class="grid grid-cols-3 gap-4 max-w-3xl mx-auto px-8 mt-8">
+            <div class="admin-card p-5 rounded-[2rem] text-center border-t-4 border-blue-500 transition-all">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Signals</p>
+                <p class="text-2xl font-black text-white" id="stat-total">0</p>
+            </div>
+            <div class="admin-card p-5 rounded-[2rem] text-center border-t-4 border-red-500 transition-all">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Active SOS</p>
+                <p class="text-2xl font-black text-red-500" id="stat-active">0</p>
+            </div>
+            <div class="admin-card p-5 rounded-[2rem] text-center border-t-4 border-green-500 transition-all">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Resolved</p>
+                <p class="text-2xl font-black text-green-500" id="stat-done">0</p>
+            </div>
+        </div>
+
+        <main class="p-8 max-w-3xl mx-auto space-y-8">
+            <div class="flex items-end justify-between px-2">
+                <div>
+                    <h2 class="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] mb-1">Incoming Signal</h2>
+                    <p class="text-2xl font-black">Laporan Darurat</p>
+                </div>
+                <button onclick="clearReports()" class="text-[10px] font-black text-red-400 bg-red-400/10 px-4 py-2 rounded-xl hover:bg-red-400/20 transition-all border border-red-400/20 uppercase">Wipe Data</button>
+            </div>
+
+            <div id="report-container" class="space-y-6"></div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // GANTI DENGAN KONFIGURASI FIREBASE SILVI
+        const firebaseConfig = {
+            apiKey: "MASUKKAN_API_KEY_ANDA",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            projectId: "PROJECT_ID_ANDA",
+            storageBucket: "PROJECT_ID.appspot.com",
+            messagingSenderId: "NOMOR_SENDER",
+            appId: "APP_ID_ANDA"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // State Dashboard
+        let lastCount = 0;
+
+        // Fungsi Load Data Real-time
+        window.startRealtimeMonitoring = () => {
+            const q = query(collection(db, "reports"), orderBy("timestamp", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                const reports = [];
+                snapshot.forEach((doc) => {
+                    reports.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Cek jika ada laporan baru untuk bunyi alarm
+                if (reports.length > lastCount && lastCount !== 0) {
+                    playAlarm();
+                }
+                lastCount = reports.length;
+
+                renderUI(reports);
+            });
+        };
+
+        // Fungsi Update Status (Done)
+        window.markAsDone = async (id) => {
+            const docRef = doc(db, "reports", id);
+            await updateDoc(docRef, { status: "SELESAI" });
+        };
+
+        // Fungsi Hapus Semua Data
+        window.clearReports = async () => {
+            if(confirm("DANGER: Hapus semua record permanen di Cloud?")) {
+                const querySnapshot = await getDocs(collection(db, "reports"));
+                const batch = writeBatch(db);
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+            }
+        };
+    </script>
+
+    <script>
+        const SECRET_PIN = "1234";
+
+        function playAlarm() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sawtooth'; 
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 1);
+            } catch (e) { console.log("Audio blocked"); }
+        }
+
+        function checkPin() {
+            if (document.getElementById('pin-input').value === SECRET_PIN) {
+                document.getElementById('admin-login').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                // Panggil fungsi monitoring dari modul firebase
+                window.startRealtimeMonitoring();
+            } else {
+                alert("❌ ACCESS DENIED!");
+                document.getElementById('pin-input').value = "";
+            }
+        }
+
+        function renderUI(reports) {
+            const container = document.getElementById('report-container');
+            
+            // Stats
+            const total = reports.length;
+            const done = reports.filter(r => r.status === "SELESAI").length;
+            const active = total - done;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-done').innerText = done;
+
+            container.innerHTML = "";
+            if(reports.length === 0) {
+                container.innerHTML = `<div class="p-20 text-center text-slate-600 font-black italic tracking-widest border-2 border-dashed border-slate-800 rounded-[3rem]">NO SIGNAL...</div>`;
+                return;
+            }
+
+            reports.forEach((rpt) => {
+                const isDone = rpt.status === "SELESAI";
+                const mapUrl = `https://www.google.com/maps?q=${rpt.coords}`;
+
+                container.innerHTML += `
+                    <div class="admin-card p-8 rounded-[3rem] animate-new-card transition-all duration-500 ${isDone ? 'opacity-40 grayscale scale-[0.98]' : 'status-pulse'}">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="${isDone ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'} text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] border border-current">
+                                ${isDone ? '✅ Resolved' : '🚨 ' + rpt.status}
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-500 font-mono">${rpt.time}</span>
+                        </div>
+                        
+                        <h3 class="font-black text-white mb-6 text-2xl leading-tight">"${rpt.message}"</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <a href="${mapUrl}" target="_blank" class="flex items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/5 hover:bg-white/10 transition-all group">
+                                <div class="bg-blue-500 p-3 rounded-2xl shadow-lg shadow-blue-500/20 text-xl">📍</div>
+                                <div>
+                                    <p class="text-[9px] font-black text-blue-400 uppercase mb-1">GPS Coordinates</p>
+                                    <p class="text-xs font-bold font-mono text-slate-300 tracking-tighter">${rpt.coords}</p>
+                                </div>
+                            </a>
+                            
+                            <div class="flex gap-2">
+                                <div class="flex-1 flex items-center justify-center bg-white/5 rounded-3xl border border-white/5">
+                                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest">${isDone ? 'Mission Success' : 'Awaiting Bantuan'}</span>
+                                </div>
+                                ${!isDone ? `
+                                <button onclick="markAsDone('${rpt.id}')" class="bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-3xl text-[10px] font-black transition-all shadow-lg shadow-green-600/20 uppercase tracking-widest">
+                                    Done
+                                </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
