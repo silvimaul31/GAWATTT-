@@ -158,7 +158,7 @@
             document.body.classList.add('emergency-active');
             document.getElementById('sos-status').classList.remove('hidden');
             
-            const msg = "🚨 DARURAT SOS (BY SILVI)! TOLONG SEGERA!";
+            const msg = "🚨 DARURAT SOS ! TOLONG SEGERA!";
             pushToFirebase(msg, "GAWAT");
             
             document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex gap-3 items-start"><div class="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] font-black animate-bounce">🚨</div><div class="bg-red-600 text-white p-4 rounded-2xl rounded-tl-none shadow-xl text-sm font-bold">POSISI ANDA TERKUNCI! Admin sedang memproses bantuan.</div></div>`;
@@ -168,3 +168,4 @@
     </script>
 </body>
 </html>
+
