@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aide-Genie | Emergency System</title>
+    <title>Aide-Genie | Tactical Emergency System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -16,13 +16,11 @@
             overflow-x: hidden;
         }
 
-        /* Tactical Header */
         .maroon-header { 
             background: linear-gradient(180deg, #450a0a 0%, #020617 100%); 
             border-bottom: 1px solid rgba(190, 18, 60, 0.2);
         }
 
-        /* Glassmorphism Card */
         .tactical-card {
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(12px);
@@ -30,7 +28,6 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
-        /* Category Button Styling */
         .category-btn {
             background: #1e293b;
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -50,7 +47,6 @@
             box-shadow: 0 0 20px rgba(190, 18, 60, 0.4);
         }
 
-        /* Modern SOS Button */
         .sos-glow {
             background: linear-gradient(90deg, #be123c, #991b1b, #be123c);
             background-size: 200% auto;
@@ -120,22 +116,21 @@
 
         <div class="mt-8 tactical-card p-8 md:p-12 rounded-[3.5rem] max-w-2xl mx-auto border-t-2 border-rose-900/50">
             <div class="text-center mb-8">
-                <h3 class="text-lg font-black uppercase tracking-widest text-white">Kirim Sinyal SOS</h3>
-                <p id="helper-text" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Pilih Kategori Di Atas</p>
+                <h3 class="text-lg font-black uppercase tracking-widest text-white">Laporan Kejadian</h3>
+                <p id="helper-text" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Lengkapi data di bawah ini</p>
             </div>
 
             <div class="space-y-4">
-                <div class="relative">
-                    <input type="number" id="user-wa" placeholder="Nomor WhatsApp..." class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold">
-                </div>
-                <div class="relative">
-                    <textarea id="user-message" placeholder="Jelaskan Situasi..." rows="3" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
-                </div>
+                <input type="number" id="user-wa" placeholder="Nomor WhatsApp..." class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold">
+                
+                <textarea id="user-message" placeholder="Jelaskan Situasi..." rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
+                
+                <textarea id="user-address" placeholder="Alamat Kejadian (Contoh: Kawali RT 2 RW 5, Ciamis)" rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
             </div>
 
             <div class="mt-8 flex flex-col gap-3">
                 <button onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <span>⚠️ Kirim SOS</span>
+                    <span>⚠️ Kirim Sinyal SOS</span>
                     <img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert" alt="rocket">
                 </button>
                 <a href="admin.html" class="text-center p-3 text-[9px] font-black opacity-30 hover:opacity-100 transition-all uppercase tracking-widest">Akses Admin Panel 🔐</a>
@@ -144,12 +139,10 @@
     </main>
 
     <script>
-        // Update Jam
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID');
         }, 1000);
 
-        // Firebase Setup (Ganti dengan Config milikmu)
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -160,7 +153,6 @@
 
         let userCoords = "Lokasi Tidak Diketahui";
 
-        // GPS Logic
         navigator.geolocation.getCurrentPosition((p) => {
             userCoords = `${p.coords.latitude},${p.coords.longitude}`;
             document.getElementById('gps-status').innerText = "Satelit Terkunci: " + userCoords;
@@ -171,11 +163,8 @@
 
         function selectCategory(el, name, msg) {
             document.getElementById('sndClick').play();
-            // Reset kategory lain
             document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-            // Aktifkan yang dipilih
             el.classList.add('active');
-            
             document.getElementById('user-message').value = msg;
             document.getElementById('helper-text').innerText = "Kategori Dipilih: " + name;
             document.getElementById('helper-text').classList.add('text-rose-400');
@@ -184,19 +173,22 @@
         function triggerSOS() {
             const wa = document.getElementById('user-wa').value;
             const msg = document.getElementById('user-message').value;
+            const addr = document.getElementById('user-address').value;
 
-            if(!wa || !msg) return alert("Lengkapi data!");
+            if(!wa || !msg || !addr) return alert("Harap isi No WA, Pesan, dan Alamat!");
 
             database.ref('adminReports').push({
                 message: msg,
                 whatsapp: wa,
+                address: addr, // Data alamat manual
                 location: userCoords,
                 time: new Date().toLocaleString(),
                 status: "MENUNGGU"
             }).then(() => {
                 document.getElementById('sndSuccess').play();
-                alert("🚀 SINYAL TERKIRIM KE PUSAT KOMANDO!");
+                alert("🚀 SINYAL SOS DAN ALAMAT BERHASIL TERKIRIM!");
                 document.getElementById('user-message').value = "";
+                document.getElementById('user-address').value = "";
             });
         }
     </script>
