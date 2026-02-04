@@ -78,7 +78,7 @@
 </head>
 <body>
 
-    <audio id="sndClick" src="https://www.soundjay.com/buttons/sounds/beep-07a.mp3" preload="auto"></audio>
+    <audio id="sndClick" src="https://actions.google.com/sounds/v1/emergency/emergency_beeps_long.ogg" preload="auto"></audio>
 
     <div id="admin-pin-overlay" class="full-overlay">
         <div class="white-modal border-t-8 border-[#800000]">
@@ -192,15 +192,17 @@
 
         // FUNGSI UTAMA SOS DENGAN GPS & SUARA
         function sendSOS() {
-            // Mainkan suara beep konfirmasi
-            document.getElementById('sndClick').play();
-
             const wa = document.getElementById('whatsapp').value;
             const msg = document.getElementById('message').value;
             const addr = document.getElementById('address').value;
             const btn = document.getElementById('btnSend');
 
             if(!selectedCat || !wa || !msg || !addr) { alert("Lengkapi data!"); return; }
+
+            // Mainkan suara beep konfirmasi (Google Beeps)
+            const sound = document.getElementById('sndClick');
+            sound.currentTime = 0; // Reset suara ke awal
+            sound.play().catch(error => console.log("Izin audio diperlukan: ", error));
 
             btn.innerText = "MENDETEKSI GPS...";
             btn.disabled = true;
