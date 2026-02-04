@@ -10,70 +10,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
-        
-        .admin-card { 
-            background: #0f172a; 
-            border: 1px solid rgba(255,255,255,0.05); 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-
-        .active-sos { 
-            border-left: 8px solid #be123c !important; 
-            animation: tactical-glow 2s infinite; 
-            background: linear-gradient(90deg, #180202 0%, #0f172a 100%);
-        }
-
-        @keyframes tactical-glow { 
-            0%, 100% { box-shadow: 0 0 10px rgba(190, 18, 60, 0.2); border-color: rgba(190, 18, 60, 0.5); } 
-            50% { box-shadow: 0 0 30px rgba(190, 18, 60, 0.5); border-color: #be123c; } 
-        }
-
-        .admin-card:hover { transform: scale(1.02); border-color: rgba(255,255,255,0.2); }
-
+        .admin-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.05); transition: all 0.4s ease; }
+        .active-sos { border-left: 8px solid #be123c !important; animation: tactical-glow 2s infinite; background: linear-gradient(90deg, #180202 0%, #0f172a 100%); }
+        @keyframes tactical-glow { 0%, 100% { box-shadow: 0 0 10px rgba(190, 18, 60, 0.2); } 50% { box-shadow: 0 0 30px rgba(190, 18, 60, 0.5); } }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
-
     <audio id="alarm" src="https://cdn.pixabay.com/audio/2024/04/15/audio_510488f7c5.mp3" loop></audio>
 
     <header class="bg-slate-900/50 backdrop-blur-lg p-6 flex justify-between items-center border-b border-white/5 sticky top-0 z-50">
         <div class="flex items-center gap-4">
-            <div class="bg-rose-900 p-3 rounded-2xl text-2xl shadow-lg shadow-rose-900/20 animate-pulse">🚨</div>
+            <div class="bg-rose-900 p-3 rounded-2xl text-2xl animate-pulse">🚨</div>
             <div>
                 <h1 class="text-xl font-black uppercase tracking-tighter">Command Center</h1>
                 <p class="text-[8px] font-bold text-rose-500 tracking-[0.3em] uppercase">Tactical Monitoring Active</p>
             </div>
         </div>
         <div class="flex gap-3">
-            <button onclick="startSystem()" id="btnStart" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-emerald-900/20">
-                Start Audio 🔊
-            </button>
-            <button onclick="location.href='index.html'" class="bg-white/5 px-6 py-2 rounded-xl text-[10px] font-black uppercase border border-white/10 hover:bg-rose-700 transition-all">Exit</button>
+            <button onclick="startSystem()" id="btnStart" class="bg-emerald-600 px-6 py-2 rounded-xl text-[10px] font-black uppercase">Start Audio 🔊</button>
+            <button onclick="location.href='index.html'" class="bg-white/5 px-6 py-2 rounded-xl text-[10px] font-black uppercase border border-white/10">Exit</button>
         </div>
     </header>
 
     <main class="p-8 max-w-4xl mx-auto space-y-8">
-        <div class="grid grid-cols-3 gap-6">
-            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-rose-900 relative overflow-hidden text-center">
+        <div class="grid grid-cols-3 gap-6 text-center">
+            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-rose-900">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active SOS</p>
                 <p id="stat-active" class="text-5xl font-black text-rose-500 mt-2">0</p>
             </div>
-            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-slate-700 text-center">
+            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-slate-700">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Reports</p>
                 <p id="stat-total" class="text-5xl font-black text-white mt-2">0</p>
             </div>
-            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-emerald-900 text-center">
+            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-emerald-900">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolved</p>
                 <p id="stat-done" class="text-5xl font-black text-emerald-500 mt-2">0</p>
             </div>
         </div>
 
-        <div id="report-container" class="space-y-6">
-            <div class="p-20 text-center opacity-20 font-black tracking-widest border-2 border-dashed border-white/5 rounded-[3rem]">SCANNING FOR SIGNALS...</div>
-        </div>
+        <div id="report-container" class="space-y-4 pt-4"></div>
     </main>
 
     <script>
@@ -84,34 +61,28 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        
-        let lastCount = 0;
-        let audioStarted = false;
+        let lastCount = 0; let audioStarted = false;
 
         function startSystem() {
             audioStarted = true;
             document.getElementById('btnStart').innerText = "System Live 🟢";
-            document.getElementById('btnStart').classList.replace('bg-emerald-600', 'bg-slate-800');
-            const alarmSnd = document.getElementById('alarm');
-            alarmSnd.play().then(() => { alarmSnd.pause(); alarmSnd.currentTime = 0; });
+            document.getElementById('alarm').play().then(() => { document.getElementById('alarm').pause(); });
         }
 
         database.ref('adminReports').on('value', (snapshot) => {
             const data = snapshot.val();
             const container = document.getElementById('report-container');
+            const count = data ? Object.keys(data).length : 0;
             
-            const currentCount = data ? Object.keys(data).length : 0;
-            if(currentCount > lastCount && audioStarted) {
-                const alarmSnd = document.getElementById('alarm');
-                alarmSnd.currentTime = 0;
-                alarmSnd.play();
-                setTimeout(() => { alarmSnd.pause(); }, 8000);
+            if(count > lastCount && audioStarted) { 
+                document.getElementById('alarm').play(); 
+                setTimeout(() => { document.getElementById('alarm').pause(); }, 8000); 
             }
-            lastCount = currentCount;
-
+            lastCount = count;
             container.innerHTML = "";
+
             if(!data) {
-                container.innerHTML = `<div class="p-20 text-center opacity-20 font-black tracking-widest border-2 border-dashed border-white/5 rounded-[3rem]">NO ACTIVE SIGNALS</div>`;
+                container.innerHTML = `<div class="p-20 text-center opacity-20 font-black border-2 border-dashed border-white/5 rounded-[3rem]">SCANNING...</div>`;
                 return;
             }
 
@@ -125,43 +96,23 @@
                 container.innerHTML += `
                     <div class="admin-card p-8 rounded-[2.5rem] ${isDone ? 'opacity-40 grayscale-[0.5]' : 'active-sos'}">
                         <div class="flex justify-between items-center mb-6">
-                            <span class="px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isDone ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500 text-white animate-pulse'}">
-                                ${isDone ? '✓ Handled' : '● Emergency Signal'}
+                            <span class="px-4 py-1 rounded-full text-[9px] font-black uppercase ${isDone ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500 text-white animate-pulse'}">
+                                ${isDone ? '✓ Handled' : '● Emergency'}
                             </span>
                             <span class="text-[10px] font-bold text-slate-500 bg-black/40 px-3 py-1 rounded-lg">${r.time}</span>
                         </div>
-                        
-                        <h3 class="text-2xl font-black mb-4 leading-tight italic text-white">"${r.message}"</h3>
-                        
-                        <div class="bg-black/20 p-4 rounded-2xl mb-6 border border-white/5">
-                            <p class="text-[9px] font-black uppercase text-rose-500 mb-1 tracking-widest">Lokasi Kejadian (Manual):</p>
-                            <p class="text-sm font-bold text-slate-300">${r.address || 'Alamat tidak diisi'}</p>
+                        <h3 class="text-2xl font-black mb-4 leading-tight italic">"${r.message}"</h3>
+                        <p class="text-xs text-slate-400 mb-6 italic">📍 ${r.address}</p>
+                        <div class="flex gap-4">
+                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-white/5 p-5 rounded-2xl text-center text-[10px] font-black uppercase border border-white/5 transition-all hover:bg-white/10">Contact 💬</a>
+                            <a href="http://maps.google.com/?q=${r.location}" target="_blank" class="flex-1 bg-white/5 p-5 rounded-2xl text-center text-[10px] font-black uppercase border border-white/5 transition-all hover:bg-white/10">Maps 🗺️</a>
+                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 bg-rose-700 p-5 rounded-2xl text-[10px] font-black uppercase">Resolve ✓</button>` : ''}
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <a href="https://www.google.com/maps?q=${r.location}" target="_blank" class="bg-rose-900/20 border border-rose-500/30 p-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-rose-900/40 transition-all group">
-                                <span class="text-xl group-hover:animate-bounce">📍</span>
-                                <span class="text-[10px] font-black uppercase tracking-widest">Buka Pin Lokasi</span>
-                            </a>
-
-                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="bg-white/5 hover:bg-white/10 p-4 rounded-2xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all">
-                                <span>💬 Hubungi Pelapor</span>
-                            </a>
-                        </div>
-
-                        ${!isDone ? `
-                            <button onclick="markDone('${r.id}')" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all">
-                                Selesaikan Misi ✓
-                            </button>
-                        ` : ''}
-                    </div>
-                `;
+                    </div>`;
             });
         });
 
-        function markDone(id) { 
-            database.ref('adminReports/'+id).update({status: "SELESAI"}); 
-        }
+        function markDone(id) { database.ref('adminReports/'+id).update({status: "SELESAI"}); }
     </script>
 </body>
 </html>
