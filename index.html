@@ -9,63 +9,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #020617; 
-            color: #f8fafc;
-            overflow-x: hidden;
-        }
-
-        .maroon-header { 
-            background: linear-gradient(180deg, #450a0a 0%, #020617 100%); 
-            border-bottom: 1px solid rgba(190, 18, 60, 0.2);
-        }
-
-        .tactical-card {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-
-        .category-btn {
-            background: #1e293b;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .category-btn:hover {
-            transform: translateY(-5px);
-            background: #334155;
-            border-color: #be123c;
-            box-shadow: 0 10px 20px rgba(190, 18, 60, 0.2);
-        }
-
-        .category-btn.active {
-            background: linear-gradient(135deg, #be123c 0%, #450a0a 100%);
-            border-color: #fb7185;
-            box-shadow: 0 0 20px rgba(190, 18, 60, 0.4);
-        }
-
-        .sos-glow {
-            background: linear-gradient(90deg, #be123c, #991b1b, #be123c);
-            background-size: 200% auto;
-            animation: move-gradient 3s linear infinite;
-            box-shadow: 0 0 20px rgba(190, 18, 60, 0.5);
-        }
-
-        @keyframes move-gradient {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-        }
-
-        .gps-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 10px #10b981;
-            display: inline-block;
-            margin-right: 6px;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; overflow-x: hidden; }
+        .maroon-header { background: linear-gradient(180deg, #450a0a 0%, #020617 100%); border-bottom: 1px solid rgba(190, 18, 60, 0.2); }
+        .tactical-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
+        .category-btn { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .category-btn:hover { transform: translateY(-5px); background: #334155; border-color: #be123c; box-shadow: 0 10px 20px rgba(190, 18, 60, 0.2); }
+        .category-btn.active { background: linear-gradient(135deg, #be123c 0%, #450a0a 100%); border-color: #fb7185; box-shadow: 0 0 20px rgba(190, 18, 60, 0.4); }
+        .sos-glow { background: linear-gradient(90deg, #be123c, #991b1b, #be123c); background-size: 200% auto; animation: move-gradient 3s linear infinite; box-shadow: 0 0 20px rgba(190, 18, 60, 0.5); }
+        @keyframes move-gradient { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; display: inline-block; margin-right: 6px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -96,19 +48,19 @@
 
     <main class="max-w-5xl mx-auto w-full px-6 -mt-12 z-10 flex-grow mb-12">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div onclick="selectCategory(this, 'Ambulans', 'Butuh Ambulans! Darurat Medis 🚑')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+            <div onclick="selectCategory(this, 'Ambulans', 'Darurat Medis 🚑')" class="category-btn p-6 rounded-[2.5rem] text-center group">
                 <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🚑</div>
                 <p class="text-[9px] font-black uppercase text-slate-400">Ambulans</p>
             </div>
-            <div onclick="selectCategory(this, 'Damkar', 'Kebakaran! Butuh Damkar 🚒')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+            <div onclick="selectCategory(this, 'Damkar', 'Darurat Kebakaran 🚒')" class="category-btn p-6 rounded-[2.5rem] text-center group">
                 <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🚒</div>
                 <p class="text-[9px] font-black uppercase text-slate-400">Damkar</p>
             </div>
-            <div onclick="selectCategory(this, 'Polisi', 'Butuh Polisi! Keadaan Kriminal 👮')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+            <div onclick="selectCategory(this, 'Polisi', 'Darurat Kriminal 👮')" class="category-btn p-6 rounded-[2.5rem] text-center group">
                 <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">👮</div>
                 <p class="text-[9px] font-black uppercase text-slate-400">Polisi</p>
             </div>
-            <div onclick="selectCategory(this, 'SAR', 'Butuh Tim SAR! Evakuasi Darurat 🛸')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+            <div onclick="selectCategory(this, 'SAR', 'Darurat Evakuasi 🛸')" class="category-btn p-6 rounded-[2.5rem] text-center group">
                 <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🛸</div>
                 <p class="text-[9px] font-black uppercase text-slate-400">Tim SAR</p>
             </div>
@@ -122,14 +74,12 @@
 
             <div class="space-y-4">
                 <input type="number" id="user-wa" placeholder="Nomor WhatsApp..." class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold">
-                
                 <textarea id="user-message" placeholder="Jelaskan Situasi..." rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
-                
                 <textarea id="user-address" placeholder="Alamat Manual / Patokan (Contoh: Kawali RT 2 RW 5, Depan Warung Nasi)" rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
             </div>
 
             <div class="mt-8 flex flex-col gap-3">
-                <button id="sos-btn" onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <button onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
                     <span>⚠️ Kirim Sinyal SOS</span>
                     <img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert" alt="rocket">
                 </button>
@@ -139,10 +89,7 @@
     </main>
 
     <script>
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID');
-        }, 1000);
-
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -150,21 +97,11 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        let userCoords = "Lokasi Tidak Diketahui";
 
-        let userCoords = "";
-        let autoAddressStr = "Mencari alamat...";
-
-        // Ambil GPS dan Alamat Otomatis
         navigator.geolocation.getCurrentPosition((p) => {
             userCoords = `${p.coords.latitude},${p.coords.longitude}`;
             document.getElementById('gps-status').innerText = "Satelit Terkunci: " + userCoords;
-
-            // Reverse Geocoding (Cari Nama Jalan)
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.coords.latitude}&lon=${p.coords.longitude}`)
-                .then(res => res.json())
-                .then(data => {
-                    autoAddressStr = data.display_name;
-                });
         }, () => {
             document.getElementById('gps-status').innerText = "Gagal Mengambil GPS";
             document.getElementById('gps-status').classList.replace('text-emerald-400', 'text-rose-500');
@@ -175,37 +112,23 @@
             document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('user-message').value = msg;
-            document.getElementById('helper-text').innerText = "Kategori Dipilih: " + name;
-            document.getElementById('helper-text').classList.add('text-rose-400');
+            document.getElementById('helper-text').innerText = "Kategori: " + name;
         }
 
         function triggerSOS() {
             const wa = document.getElementById('user-wa').value;
             const msg = document.getElementById('user-message').value;
             const addr = document.getElementById('user-address').value;
-            const btn = document.getElementById('sos-btn');
-
-            if(!wa || !msg || !addr) return alert("Harap isi No WA, Pesan, dan Alamat!");
-            
-            // Beri feedback loading
-            btn.disabled = true;
-            btn.innerText = "MENGIRIM...";
+            if(!wa || !msg || !addr) return alert("Harap isi semua data!");
 
             database.ref('adminReports').push({
-                message: msg,
-                whatsapp: wa,
-                address: addr,           // Alamat patokan manual
-                autoAddress: autoAddressStr, // Alamat jalan dari satelit
-                location: userCoords,
-                time: new Date().toLocaleString(),
-                status: "MENUNGGU"
+                message: msg, whatsapp: wa, address: addr,
+                location: userCoords, time: new Date().toLocaleString(), status: "MENUNGGU"
             }).then(() => {
                 document.getElementById('sndSuccess').play();
                 alert("🚀 SINYAL SOS BERHASIL TERKIRIM!");
                 document.getElementById('user-message').value = "";
                 document.getElementById('user-address').value = "";
-                btn.disabled = false;
-                btn.innerHTML = `<span>⚠️ Kirim Sinyal SOS</span><img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert">`;
             });
         }
     </script>
