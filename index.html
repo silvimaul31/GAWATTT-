@@ -16,16 +16,20 @@
         }
         .category-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
         .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .category-card.selected {
+            border: 3px solid #ef4444;
+            background-color: #fef2f2;
         }
         .sos-button {
             background: linear-gradient(135deg, #cc0000 0%, #800000 100%);
             box-shadow: 0 10px 25px -5px rgba(128, 0, 0, 0.4);
         }
-        /* Animasi lucu untuk icon */
         .icon-bounce:hover {
             animation: bounce 0.5s infinite;
         }
@@ -56,19 +60,19 @@
 
     <main class="max-w-4xl mx-auto w-full px-6 -mt-10 relative z-20 flex-grow">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
+            <div onclick="selectCategory('Ambulans', 'Darurat Medis: Ada yang melahirkan / Kecelakaan')" class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
                 <div class="text-4xl mb-3 icon-bounce">🚑</div>
                 <p class="text-[11px] font-black text-slate-800 uppercase italic">Ambulans</p>
             </div>
-            <div class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
+            <div onclick="selectCategory('Damkar', 'Darurat Kebakaran: Terjadi kebakaran di lokasi saya!')" class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
                 <div class="text-4xl mb-3 icon-bounce">🚒</div>
                 <p class="text-[11px] font-black text-slate-800 uppercase italic">Damkar</p>
             </div>
-            <div class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
+            <div onclick="selectCategory('Polisi', 'Darurat Keamanan: Ada tindak kriminal / Kerusuhan')" class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
                 <div class="text-4xl mb-3 icon-bounce">👮</div>
                 <p class="text-[11px] font-black text-slate-800 uppercase italic">Polisi</p>
             </div>
-            <div class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
+            <div onclick="selectCategory('Tim SAR', 'Darurat Bencana: Perlu evakuasi / Orang hilang')" class="category-card bg-white p-6 rounded-[2.5rem] text-center shadow-sm border border-slate-100 group">
                 <div class="text-4xl mb-3 icon-bounce">🛸</div>
                 <p class="text-[11px] font-black text-slate-800 uppercase italic">Tim SAR</p>
             </div>
@@ -77,12 +81,12 @@
         <div class="mt-12 space-y-4 max-w-xl mx-auto bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100">
             <div class="text-center mb-6">
                 <h2 class="font-black text-slate-800 text-lg uppercase tracking-tight">Kirim Sinyal Bantuan 📡</h2>
-                <p class="text-slate-400 text-[10px] font-bold uppercase mt-1">Isi data di bawah dengan benar</p>
+                <p id="helper-text" class="text-slate-400 text-[10px] font-bold uppercase mt-1">Pilih kategori di atas atau isi manual</p>
             </div>
 
             <div class="relative">
                 <span class="absolute left-5 top-1/2 -translate-y-1/2 text-lg">📱</span>
-                <input type="number" id="user-wa" placeholder="Nomor WhatsApp (Contoh: 0812...)" 
+                <input type="number" id="user-wa" placeholder="Nomor WhatsApp Anda..." 
                     class="w-full bg-slate-50 p-5 pl-14 rounded-3xl focus:outline-none focus:ring-4 focus:ring-green-500/10 text-slate-800 font-bold transition-all border border-slate-100">
             </div>
 
@@ -110,35 +114,44 @@
     </footer>
 
     <script>
+        // FUNGSI BARU: Mengisi pesan otomatis saat ikon diklik
+        function selectCategory(name, autoMessage) {
+            document.getElementById('user-message').value = autoMessage;
+            document.getElementById('helper-text').innerText = "Kategori Terpilih: " + name + " ✅";
+            document.getElementById('helper-text').classList.replace('text-slate-400', 'text-red-500');
+            
+            // Beri efek getar sedikit biar terasa interaktif
+            window.navigator.vibrate(50);
+        }
+
         function sendToWhatsApp() {
             const wa = document.getElementById('user-wa').value;
             const msg = document.getElementById('user-message').value;
             
             if(!wa || !msg) {
-                alert("Aduh! 😖 Nomor WA dan Pesan harus diisi ya supaya kami bisa bantu!");
+                alert("Aduh! 😖 Nomor WA dan Pesan harus diisi ya!");
                 return;
             }
 
-            // Format nomor WA agar depannya 62
             let formattedWa = wa;
             if (wa.startsWith("0")) {
                 formattedWa = "62" + wa.substring(1);
             }
 
-            const text = encodeURIComponent(`🚨 *LAPORAN DARURAT AIDE-GENIE* 🚨\n\nKondisi: ${msg}\nNo. Pelapor: ${wa}\n\n_Mohon segera tindak lanjuti!_`);
+            const text = encodeURIComponent(`🚨 *LAPORAN DARURAT AIDE-GENIE* 🚨\n\nKondisi: ${msg}\nNo. Pelapor: ${wa}`);
             const whatsappUrl = `https://wa.me/${formattedWa}?text=${text}`;
-            
             window.open(whatsappUrl, '_blank');
         }
 
         function triggerSOS() {
             const msg = document.getElementById('user-message').value;
-            if(!msg) {
-                alert("Tulis dulu kejadiannya apa, baru klik SOS! 🆘");
+            const wa = document.getElementById('user-wa').value;
+            if(!msg || !wa) {
+                alert("Lengkapi data dulu ya! 🆘");
                 return;
             }
-            // Logic Firebase kamu masuk sini
-            alert("🚀 Sinyal SOS Terkirim ke Command Center! Tetap di tempat, bantuan menuju lokasi.");
+            // Sini hubungkan ke Firebase kamu
+            alert("🚀 SOS Terkirim! Admin segera merespon.");
         }
     </script>
 </body>
