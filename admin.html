@@ -3,46 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Center | Admin</title>
+    <title>Command Center | Admin Aide-Genie</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
-        .admin-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
-        .active-sos { border-left: 6px solid #be123c !important; animation: glow 2s infinite; }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(190, 18, 60, 0.2); } 50% { box-shadow: 0 0 20px rgba(190, 18, 60, 0.4); } }
+        
+        /* Navy Dark Card Style */
+        .admin-card { 
+            background: #0f172a; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+
+        /* Efek Berdenyut Maroon untuk SOS Aktif */
+        .active-sos { 
+            border-left: 8px solid #be123c !important; 
+            animation: tactical-glow 2s infinite; 
+            background: linear-gradient(90deg, #180202 0%, #0f172a 100%);
+        }
+
+        @keyframes tactical-glow { 
+            0%, 100% { box-shadow: 0 0 10px rgba(190, 18, 60, 0.2); border-color: rgba(190, 18, 60, 0.5); } 
+            50% { box-shadow: 0 0 30px rgba(190, 18, 60, 0.5); border-color: #be123c; } 
+        }
+
+        .admin-card:hover { transform: scale(1.02); border-color: rgba(255,255,255,0.2); }
+
+        /* Custom Scrollbar Navy */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <audio id="alarm" src="https://cdn.pixabay.com/audio/2022/03/10/audio_c35270364d.mp3" loop></audio>
+    <audio id="alarm" src="https://cdn.pixabay.com/audio/2024/04/15/audio_510488f7c5.mp3" loop></audio>
 
-    <header class="bg-slate-900 p-6 flex justify-between items-center border-b border-white/5 sticky top-0 z-50">
+    <header class="bg-slate-900/50 backdrop-blur-lg p-6 flex justify-between items-center border-b border-white/5 sticky top-0 z-50">
         <div class="flex items-center gap-4">
-            <div class="bg-rose-900 p-3 rounded-2xl text-2xl shadow-lg">🚨</div>
-            <h1 class="text-xl font-black uppercase tracking-tighter">Command Center</h1>
+            <div class="bg-rose-900 p-3 rounded-2xl text-2xl shadow-lg shadow-rose-900/20 animate-pulse">🚨</div>
+            <div>
+                <h1 class="text-xl font-black uppercase tracking-tighter">Command Center</h1>
+                <p class="text-[8px] font-bold text-rose-500 tracking-[0.3em] uppercase">Tactical Monitoring Active</p>
+            </div>
         </div>
         <div class="flex gap-3">
-            <button onclick="startSystem()" id="btnStart" class="bg-emerald-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase">Start Audio 🔊</button>
-            <button onclick="location.href='index.html'" class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase">Exit</button>
+            <button onclick="startSystem()" id="btnStart" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-emerald-900/20">
+                Start Audio 🔊
+            </button>
+            <button onclick="location.href='index.html'" class="bg-white/5 px-6 py-2 rounded-xl text-[10px] font-black uppercase border border-white/10 hover:bg-rose-700 transition-all">Exit</button>
         </div>
     </header>
 
     <main class="p-8 max-w-4xl mx-auto space-y-8">
         <div class="grid grid-cols-3 gap-6">
-            <div class="admin-card p-8 rounded-[2rem] border-b-4 border-rose-900">
+            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-rose-900 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-4xl">📡</div>
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active SOS</p>
-                <p id="stat-active" class="text-4xl font-black text-rose-500">0</p>
+                <p id="stat-active" class="text-5xl font-black text-rose-500 mt-2">0</p>
             </div>
+            
+            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-slate-700">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Reports</p>
+                <p id="stat-total" class="text-5xl font-black text-white mt-2">0</p>
             </div>
 
-        <div id="report-container" class="space-y-4"></div>
+            <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-emerald-900">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolved</p>
+                <p id="stat-done" class="text-5xl font-black text-emerald-500 mt-2">0</p>
+            </div>
+        </div>
+
+        <div id="report-container" class="space-y-4">
+            <div class="p-20 text-center opacity-20 font-black tracking-widest border-2 border-dashed border-white/5 rounded-[3rem]">SCANNING FOR SIGNALS...</div>
+        </div>
     </main>
 
     <script>
-        const firebaseConfig = { apiKey: "PASTE_API_KEY_KAMU", databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", projectId: "project-gawattt" };
+        // MASUKKAN CONFIG FIREBASE KAMU DI SINI
+        const firebaseConfig = { 
+            apiKey: "PASTE_API_KEY_KAMU", 
+            databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
+            projectId: "project-gawattt" 
+        };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         
@@ -53,44 +99,75 @@
             audioStarted = true;
             document.getElementById('btnStart').innerText = "System Live 🟢";
             document.getElementById('btnStart').classList.replace('bg-emerald-600', 'bg-slate-800');
+            // Play & Pause langsung agar browser "membuka izin" suara
+            const alarmSnd = document.getElementById('alarm');
+            alarmSnd.play().then(() => {
+                alarmSnd.pause();
+                alarmSnd.currentTime = 0;
+            });
         }
 
         database.ref('adminReports').on('value', (snapshot) => {
             const data = snapshot.val();
             const container = document.getElementById('report-container');
             
+            // Logika Suara Sirine Bahaya
             const currentCount = data ? Object.keys(data).length : 0;
             if(currentCount > lastCount && audioStarted) {
-                document.getElementById('alarm').play();
-                setTimeout(() => document.getElementById('alarm').pause(), 5000);
+                const alarmSnd = document.getElementById('alarm');
+                alarmSnd.currentTime = 0;
+                alarmSnd.play();
+                // Mati otomatis setelah 8 detik agar tidak mengganggu koordinasi
+                setTimeout(() => { alarmSnd.pause(); }, 8000);
             }
             lastCount = currentCount;
 
             container.innerHTML = "";
-            if(!data) return;
+            if(!data) {
+                container.innerHTML = `<div class="p-20 text-center opacity-20 font-black tracking-widest border-2 border-dashed border-white/5 rounded-[3rem]">NO ACTIVE SIGNALS</div>`;
+                return;
+            }
 
             const reports = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             document.getElementById('stat-active').innerText = reports.filter(r => r.status === "MENUNGGU").length;
+            document.getElementById('stat-total').innerText = reports.length;
+            document.getElementById('stat-done').innerText = reports.filter(r => r.status === "SELESAI").length;
 
             reports.forEach(r => {
                 const isDone = r.status === "SELESAI";
                 container.innerHTML += `
-                    <div class="admin-card p-8 rounded-[2.5rem] ${isDone ? 'opacity-40' : 'active-sos'}">
-                        <div class="flex justify-between mb-4 text-[10px] font-black uppercase">
-                            <span class="${isDone?'text-green-500':'text-rose-500'}">${r.status}</span>
-                            <span class="text-slate-500">${r.time}</span>
+                    <div class="admin-card p-8 rounded-[2.5rem] ${isDone ? 'opacity-40 grayscale-[0.5]' : 'active-sos'}">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isDone ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500 text-white animate-pulse'}">
+                                ${isDone ? '✓ Handled' : '● Emergency'}
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-500 bg-black/40 px-3 py-1 rounded-lg">${r.time}</span>
                         </div>
-                        <h3 class="text-xl font-bold mb-6 italic">"${r.message}"</h3>
-                        <div class="flex gap-3">
-                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-white/5 p-4 rounded-2xl text-center text-[10px] font-black uppercase">Chat Pelapor</a>
-                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 bg-rose-700 p-4 rounded-2xl text-[10px] font-black uppercase">Selesaikan</button>` : ''}
+                        
+                        <h3 class="text-2xl font-black mb-8 leading-tight italic text-white tracking-tight">"${r.message}"</h3>
+                        
+                        <div class="flex gap-4">
+                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-white/5 hover:bg-white/10 p-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all">
+                                Contact Pelapor 💬
+                            </a>
+                            ${!isDone ? `
+                                <button onclick="markDone('${r.id}')" class="flex-1 bg-rose-700 hover:bg-rose-600 p-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-900/40 transition-all">
+                                    Resolve Mission ✓
+                                </button>
+                            ` : `
+                                <div class="flex-1 bg-emerald-900/20 p-5 rounded-2xl text-center text-[10px] font-black uppercase text-emerald-500 border border-emerald-900/30">
+                                    Resolved
+                                </div>
+                            `}
                         </div>
                     </div>
                 `;
             });
         });
 
-        function markDone(id) { database.ref('adminReports/'+id).update({status: "SELESAI"}); }
+        function markDone(id) { 
+            database.ref('adminReports/'+id).update({status: "SELESAI"}); 
+        }
     </script>
 </body>
 </html>
