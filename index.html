@@ -3,165 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aide-Genie | Emergency Portal</title>
+    <title>Aide-Genie | Tactical Emergency System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --maroon: #800000; --navy: #0f172a; --white: #ffffff; }
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--navy); 
-            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
-            color: var(--white);
-            min-height: 100vh;
-        }
-
-        /* Nav & Logo */
-        .glass-nav { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
-
-        /* Category Cards */
-        .category-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-        .category-btn:hover {
-            background: rgba(128, 0, 0, 0.2);
-            border-color: var(--maroon);
-            transform: translateY(-5px);
-        }
-        .category-btn.selected {
-            background: var(--maroon);
-            border-color: var(--white);
-            box-shadow: 0 0 20px rgba(128, 0, 0, 0.5);
-        }
-
-        /* Input Styling */
-        .elegant-input {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s;
-        }
-        .elegant-input:focus {
-            border-color: var(--maroon);
-            background: rgba(255, 255, 255, 0.05);
-            outline: none;
-            box-shadow: 0 0 15px rgba(128, 0, 0, 0.2);
-        }
-
-        /* SOS Button */
-        .sos-glow {
-            background: var(--maroon);
-            box-shadow: 0 0 30px rgba(128, 0, 0, 0.6);
-            transition: all 0.3s;
-            animation: pulse-red 2s infinite;
-        }
-        .sos-glow:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 50px rgba(128, 0, 0, 0.8);
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(128, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
-        }
-
-        .form-container {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; overflow-x: hidden; }
+        .maroon-header { background: linear-gradient(180deg, #450a0a 0%, #020617 100%); border-bottom: 1px solid rgba(190, 18, 60, 0.2); }
+        .tactical-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
+        .category-btn { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .category-btn:hover { transform: translateY(-5px); background: #334155; border-color: #be123c; box-shadow: 0 10px 20px rgba(190, 18, 60, 0.2); }
+        .category-btn.active { background: linear-gradient(135deg, #be123c 0%, #450a0a 100%); border-color: #fb7185; box-shadow: 0 0 20px rgba(190, 18, 60, 0.4); }
+        .sos-glow { background: linear-gradient(90deg, #be123c, #991b1b, #be123c); background-size: 200% auto; animation: move-gradient 3s linear infinite; box-shadow: 0 0 20px rgba(190, 18, 60, 0.5); }
+        @keyframes move-gradient { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; display: inline-block; margin-right: 6px; }
     </style>
 </head>
-<body class="pb-12">
+<body class="min-h-screen flex flex-col">
 
-    <nav class="glass-nav sticky top-0 z-50 p-4">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-white p-2 rounded-xl shadow-lg">
-                    <img src="https://cdn-icons-png.flaticon.com/512/1022/1022313.png" class="w-6 h-6" alt="logo">
+    <audio id="sndClick" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+    <audio id="sndSuccess" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3"></audio>
+
+    <header class="maroon-header p-8 rounded-b-[4rem]">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="bg-white p-3 rounded-2xl shadow-xl">
+                    <img src="https://cdn-icons-png.flaticon.com/512/11252/11252189.png" class="w-10 h-10" alt="icon">
                 </div>
-                <h1 class="text-xl font-extrabold tracking-tighter">AIDE-GENIE</h1>
+                <div>
+                    <h1 class="text-2xl font-black uppercase tracking-tighter">AIDE-GENIE</h1>
+                    <div class="flex items-center">
+                        <span class="gps-dot"></span>
+                        <p id="gps-status" class="text-[8px] font-bold text-emerald-400 uppercase tracking-widest italic">Mencari Sinyal Satelit...</p>
+                    </div>
+                </div>
             </div>
-            <div id="system-time" class="text-[10px] font-bold opacity-60 bg-white/10 px-3 py-1 rounded-lg"></div>
+            <div class="hidden md:block text-right">
+                <p class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Waktu Sistem</p>
+                <p id="clock" class="text-xs font-black">00:00:00</p>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <main class="max-w-4xl mx-auto px-6 mt-10 space-y-10">
-        
-        <section class="text-center">
-            <h2 class="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-6">Pilih Layanan Bantuan</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div onclick="selectCategory('Ambulans', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                    <span class="text-3xl">🚑</span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Ambulans</span>
-                </div>
-                <div onclick="selectCategory('Damkar', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                    <span class="text-3xl">🚒</span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Damkar</span>
-                </div>
-                <div onclick="selectCategory('Polisi', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                    <span class="text-3xl">👮</span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Polisi</span>
-                </div>
-                <div onclick="selectCategory('Tim SAR', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
-                    <span class="text-3xl">🛸</span>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Tim SAR</span>
-                </div>
+    <main class="max-w-5xl mx-auto w-full px-6 -mt-12 z-10 flex-grow mb-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div onclick="selectCategory(this, 'Ambulans', 'Darurat Medis 🚑')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🚑</div>
+                <p class="text-[9px] font-black uppercase text-slate-400">Ambulans</p>
             </div>
-        </section>
+            <div onclick="selectCategory(this, 'Damkar', 'Darurat Kebakaran 🚒')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🚒</div>
+                <p class="text-[9px] font-black uppercase text-slate-400">Damkar</p>
+            </div>
+            <div onclick="selectCategory(this, 'Polisi', 'Darurat Kriminal 👮')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">👮</div>
+                <p class="text-[9px] font-black uppercase text-slate-400">Polisi</p>
+            </div>
+            <div onclick="selectCategory(this, 'SAR', 'Darurat Evakuasi 🛸')" class="category-btn p-6 rounded-[2.5rem] text-center group">
+                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🛸</div>
+                <p class="text-[9px] font-black uppercase text-slate-400">Tim SAR</p>
+            </div>
+        </div>
 
-        <section class="form-container p-8 rounded-[3rem] shadow-2xl">
+        <div class="mt-8 tactical-card p-8 md:p-12 rounded-[3.5rem] max-w-2xl mx-auto border-t-2 border-rose-900/50">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-extrabold tracking-tight">LAPORAN KEJADIAN</h2>
-                <p id="selected-label" class="text-[10px] font-bold text-maroon-400 uppercase tracking-widest mt-1">Silakan pilih kategori di atas</p>
+                <h3 class="text-lg font-black uppercase tracking-widest text-white">Laporan Kejadian</h3>
+                <p id="helper-text" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Lengkapi data di bawah ini</p>
             </div>
 
-            <div class="space-y-6">
-                <div>
-                    <label class="text-[10px] font-bold uppercase ml-4 mb-2 block opacity-50">Nomor WhatsApp</label>
-                    <input type="number" id="whatsapp" placeholder="0812..." class="elegant-input w-full p-5 rounded-2xl text-sm font-semibold">
-                </div>
-                
-                <div>
-                    <label class="text-[10px] font-bold uppercase ml-4 mb-2 block opacity-50">Jelaskan Situasi</label>
-                    <textarea id="message" rows="3" placeholder="Apa yang terjadi?..." class="elegant-input w-full p-5 rounded-2xl text-sm font-semibold"></textarea>
-                </div>
+            <div class="space-y-4">
+                <input type="number" id="user-wa" placeholder="Nomor WhatsApp..." class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold">
+                <textarea id="user-message" placeholder="Jelaskan Situasi..." rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
+                <textarea id="user-address" placeholder="Alamat Manual / Patokan (Contoh: Kawali RT 2 RW 5, Depan Warung Nasi)" rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
+            </div>
 
-                <div>
-                    <label class="text-[10px] font-bold uppercase ml-4 mb-2 block opacity-50">Alamat Manual / Patokan</label>
-                    <textarea id="address" rows="2" placeholder="Contoh: Depan Warung Nasi RT 02..." class="elegant-input w-full p-5 rounded-2xl text-sm font-semibold"></textarea>
-                </div>
-
-                <button onclick="sendSOS()" class="sos-glow w-full py-6 rounded-[2rem] text-sm font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
-                    ⚠️ Kirim Sinyal SOS ⚠️
+            <div class="mt-8 flex flex-col gap-3">
+                <button onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <span>⚠️ Kirim Sinyal SOS</span>
+                    <img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert" alt="rocket">
                 </button>
+                <a href="admin.html" class="text-center p-3 text-[9px] font-black opacity-30 hover:opacity-100 transition-all uppercase tracking-widest">Akses Admin Panel 🔐</a>
             </div>
-        </section>
-
-        <p onclick="location.href='admin.html'" class="text-center text-[10px] font-bold opacity-30 hover:opacity-100 cursor-pointer transition-all">AKSES ADMIN PANEL 🔐</p>
+        </div>
     </main>
 
     <script>
-        let selectedCat = "";
-
-        // Update Waktu
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('system-time').innerText = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-        }, 1000);
-
-        function selectCategory(cat, el) {
-            selectedCat = cat;
-            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('selected-label').innerText = "KATEGORI: " + cat;
-        }
-
-        // Firebase Config (Samakan dengan punyamu)
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -169,29 +97,38 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        let userCoords = "Lokasi Tidak Diketahui";
 
-        function sendSOS() {
-            const wa = document.getElementById('whatsapp').value;
-            const msg = document.getElementById('message').value;
-            const addr = document.getElementById('address').value;
+        navigator.geolocation.getCurrentPosition((p) => {
+            userCoords = `${p.coords.latitude},${p.coords.longitude}`;
+            document.getElementById('gps-status').innerText = "Satelit Terkunci: " + userCoords;
+        }, () => {
+            document.getElementById('gps-status').innerText = "Gagal Mengambil GPS";
+            document.getElementById('gps-status').classList.replace('text-emerald-400', 'text-rose-500');
+        });
 
-            if(!selectedCat || !wa || !msg || !addr) {
-                alert("Lengkapi semua data dan pilih kategori!");
-                return;
-            }
+        function selectCategory(el, name, msg) {
+            document.getElementById('sndClick').play();
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('user-message').value = msg;
+            document.getElementById('helper-text').innerText = "Kategori: " + name;
+        }
 
-            const reportId = Date.now();
-            database.ref('adminReports/' + reportId).set({
-                category: selectedCat,
-                whatsapp: wa,
-                message: msg,
-                address: addr,
-                time: new Date().toLocaleString(),
-                status: "MENUNGGU",
-                location: "0,0" // Bisa ditambah Geolocation API nanti
+        function triggerSOS() {
+            const wa = document.getElementById('user-wa').value;
+            const msg = document.getElementById('user-message').value;
+            const addr = document.getElementById('user-address').value;
+            if(!wa || !msg || !addr) return alert("Harap isi semua data!");
+
+            database.ref('adminReports').push({
+                message: msg, whatsapp: wa, address: addr,
+                location: userCoords, time: new Date().toLocaleString(), status: "MENUNGGU"
             }).then(() => {
-                alert("🚨 SINYAL TERKIRIM! Mohon tetap tenang, bantuan sedang diproses.");
-                location.reload();
+                document.getElementById('sndSuccess').play();
+                alert("🚀 SINYAL SOS BERHASIL TERKIRIM!");
+                document.getElementById('user-message').value = "";
+                document.getElementById('user-address').value = "";
             });
         }
     </script>
