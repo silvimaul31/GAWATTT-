@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --maroon: #800000; --soft-blue: #e0f2fe; --navy: #0f172a; }
+        :root { --maroon: #800000; --navy: #0f172a; }
         
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
@@ -78,7 +78,7 @@
 </head>
 <body>
 
-    <audio id="sndClick" src="https://actions.google.com/sounds/v1/emergency/emergency_beeps_long.ogg" preload="auto"></audio>
+    <audio id="sndClick" src="https://cdn.pixabay.com/audio/2021/08/04/audio_1969a48d64.mp3" preload="auto"></audio>
 
     <div id="admin-pin-overlay" class="full-overlay">
         <div class="white-modal border-t-8 border-[#800000]">
@@ -181,7 +181,6 @@
             document.getElementById('system-time').innerText = d.getHours() + ":" + d.getMinutes().toString().padStart(2, '0');
         }, 1000);
 
-        // Firebase Setup
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -190,7 +189,6 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // FUNGSI UTAMA SOS DENGAN GPS & SUARA
         function sendSOS() {
             const wa = document.getElementById('whatsapp').value;
             const msg = document.getElementById('message').value;
@@ -199,15 +197,14 @@
 
             if(!selectedCat || !wa || !msg || !addr) { alert("Lengkapi data!"); return; }
 
-            // Mainkan suara beep konfirmasi (Google Beeps)
+            // Play Suara Sirine Singkat
             const sound = document.getElementById('sndClick');
-            sound.currentTime = 0; // Reset suara ke awal
-            sound.play().catch(error => console.log("Izin audio diperlukan: ", error));
+            sound.currentTime = 0;
+            sound.play();
 
             btn.innerText = "MENDETEKSI GPS...";
             btn.disabled = true;
 
-            // Meminta Lokasi Otomatis
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -215,7 +212,6 @@
                         saveData(wa, msg, addr, coords);
                     },
                     (error) => {
-                        console.warn("GPS ditolak/gagal, mengirim tanpa koordinat.");
                         saveData(wa, msg, addr, "0,0");
                     },
                     { enableHighAccuracy: true, timeout: 5000 }
