@@ -91,13 +91,11 @@
                 </div>
                 <button onclick="clearReports()" class="text-[10px] font-black text-red-400 bg-red-400/10 px-4 py-2 rounded-xl hover:bg-red-400/20 transition-all border border-red-400/20 uppercase">Wipe Data</button>
             </div>
-
             <div id="report-container" class="space-y-6 pb-20"></div>
         </main>
     </div>
 
     <script>
-        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "PASTE_API_KEY_KAMU",
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/",
@@ -166,11 +164,19 @@
                 const isDone = rpt.status === "SELESAI";
                 const waNumber = rpt.whatsapp || "6281234567890";
                 
+                // Template pesan otomatis
+                const msgMeluncur = encodeURIComponent("Halo, kami dari tim bantuan Aide-Genie. Laporan Anda sudah kami terima dan tim bantuan sedang MELUNCUR ke lokasi Anda. Mohon tetap tenang.");
+
                 container.innerHTML += `
-                    <div class="admin-card p-8 rounded-[3rem] animate-new-card transition-all duration-500 
-                        ${isDone ? 'opacity-40 grayscale scale-[0.98]' : 'status-pulse border-red-500/30'}">
+                    <div class="admin-card p-8 rounded-[3rem] animate-new-card transition-all relative ${isDone ? 'opacity-40 grayscale' : 'status-pulse'}">
                         
-                        <div class="flex justify-between items-center mb-6">
+                        <button onclick="deleteSingleReport('${rpt.id}')" class="absolute top-8 right-8 text-slate-600 hover:text-red-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+
+                        <div class="flex justify-between items-center mb-6 pr-8">
                             <span class="${isDone ? 'text-green-400 border-green-400' : 'text-red-400 border-red-400'} text-[9px] font-black px-4 py-1.5 rounded-full uppercase border">
                                 ${isDone ? '✅ SELESAI DITANGANI' : '🚨 MENUNGGU TINDAKAN'}
                             </span>
@@ -180,35 +186,37 @@
                         <h3 class="font-black text-white mb-6 text-2xl leading-tight">"${rpt.message}"</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <a href="https://wa.me/${waNumber}?text=Halo,%20ini%20Admin%20Aide-Genie.%20Kami%20menindaklanjuti%20laporan:%20${encodeURIComponent(rpt.message)}" 
-                               target="_blank" 
-                               class="flex items-center gap-4 bg-green-500/10 p-4 rounded-3xl border border-green-500/20 hover:bg-green-500/30 transition-all">
-                                <div class="bg-[#25D366] p-3 rounded-2xl text-xl shadow-lg shadow-green-500/20">💬</div>
-                                <div>
-                                    <p class="text-[9px] font-black text-green-400 uppercase mb-1">WhatsApp Pelapor</p>
-                                    <p class="text-xs font-bold text-white">Hubungi Segera</p>
-                                </div>
-                            </a>
+                            <div class="space-y-2">
+                                <a href="https://wa.me/${waNumber}?text=Halo,%20ini%20Admin%20Aide-Genie.%20Kami%20menerima%20laporan:%20${encodeURIComponent(rpt.message)}" 
+                                   target="_blank" 
+                                   class="flex items-center gap-4 bg-green-500/10 p-4 rounded-3xl border border-green-500/20 hover:bg-green-500/20 transition-all">
+                                    <div class="bg-[#25D366] p-3 rounded-2xl text-xl">💬</div>
+                                    <div>
+                                        <p class="text-[9px] font-black text-green-400 uppercase mb-1">WhatsApp Pelapor</p>
+                                        <p class="text-xs font-bold text-white italic">Chat Manual</p>
+                                    </div>
+                                </a>
+                                ${!isDone ? `
+                                <a href="https://wa.me/${waNumber}?text=${msgMeluncur}" target="_blank" class="block text-center bg-white/5 hover:bg-white/10 py-2 rounded-xl text-[9px] font-black text-green-400 uppercase tracking-widest transition-all">
+                                    ⚡ Kirim: Tim Meluncur!
+                                </a>
+                                ` : ''}
+                            </div>
 
-                            <a href="${rpt.location}" target="_blank" class="flex items-center gap-4 bg-blue-500/10 p-4 rounded-3xl border border-blue-500/20 hover:bg-blue-500/30 transition-all">
-                                <div class="bg-blue-500 p-3 rounded-2xl text-xl shadow-lg shadow-blue-500/20">📍</div>
+                            <a href="${rpt.location}" target="_blank" class="flex items-center gap-4 bg-blue-500/10 p-4 rounded-3xl border border-blue-500/20 hover:bg-blue-500/20 transition-all">
+                                <div class="bg-blue-500 p-3 rounded-2xl text-xl font-bold italic">📍</div>
                                 <div>
                                     <p class="text-[9px] font-black text-blue-400 uppercase mb-1">Lokasi Kejadian</p>
-                                    <p class="text-xs font-bold text-white">${rpt.coords || 'Cek Peta'}</p>
+                                    <p class="text-xs font-bold text-white">${rpt.coords || 'Lihat Peta'}</p>
                                 </div>
                             </a>
                         </div>
 
                         ${!isDone ? `
-                            <button onclick="markAsDone('${rpt.id}')" 
-                                class="w-full mt-6 bg-green-600 hover:bg-green-500 text-white py-4 rounded-3xl text-[11px] font-black uppercase tracking-widest transition-all transform active:scale-95 shadow-xl shadow-green-900/20">
-                                Tandai Selesai Ditangani ✅
+                            <button onclick="markAsDone('${rpt.id}')" class="w-full mt-4 bg-white/5 hover:bg-green-600 py-4 rounded-3xl text-[10px] font-black text-slate-400 hover:text-white transition-all uppercase border border-white/5">
+                                Mark as Resolved
                             </button>
-                        ` : `
-                            <div class="w-full mt-6 bg-white/5 py-4 rounded-3xl text-center border border-white/5">
-                                <p class="text-[10px] font-black text-slate-500 uppercase">Laporan Selesai & Diarsipkan</p>
-                            </div>
-                        `}
+                        ` : ''}
                     </div>
                 `;
             });
@@ -224,8 +232,14 @@
             database.ref('adminReports/' + id).update({ status: "SELESAI" });
         }
 
+        function deleteSingleReport(id) {
+            if(confirm("Hapus laporan ini secara permanen?")) {
+                database.ref('adminReports/' + id).remove();
+            }
+        }
+
         function clearReports() {
-            if(confirm("PERINGATAN: Hapus semua data dari Firebase secara permanen?")) {
+            if(confirm("Hapus semua data permanen?")) {
                 database.ref('adminReports').remove();
             }
         }
