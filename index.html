@@ -125,11 +125,11 @@
                 
                 <textarea id="user-message" placeholder="Jelaskan Situasi..." rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
                 
-                <textarea id="user-address" placeholder="Alamat Kejadian (Contoh: Kawali RT 2 RW 5, Ciamis)" rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
+                <textarea id="user-address" placeholder="Alamat Manual / Patokan (Contoh: Kawali RT 2 RW 5, Depan Warung Nasi)" rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
             </div>
 
             <div class="mt-8 flex flex-col gap-3">
-                <button onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <button id="sos-btn" onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
                     <span>⚠️ Kirim Sinyal SOS</span>
                     <img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert" alt="rocket">
                 </button>
@@ -151,11 +151,20 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        let userCoords = "Lokasi Tidak Diketahui";
+        let userCoords = "";
+        let autoAddressStr = "Mencari alamat...";
 
+        // Ambil GPS dan Alamat Otomatis
         navigator.geolocation.getCurrentPosition((p) => {
             userCoords = `${p.coords.latitude},${p.coords.longitude}`;
             document.getElementById('gps-status').innerText = "Satelit Terkunci: " + userCoords;
+
+            // Reverse Geocoding (Cari Nama Jalan)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.coords.latitude}&lon=${p.coords.longitude}`)
+                .then(res => res.json())
+                .then(data => {
+                    autoAddressStr = data.display_name;
+                });
         }, () => {
             document.getElementById('gps-status').innerText = "Gagal Mengambil GPS";
             document.getElementById('gps-status').classList.replace('text-emerald-400', 'text-rose-500');
@@ -174,21 +183,29 @@
             const wa = document.getElementById('user-wa').value;
             const msg = document.getElementById('user-message').value;
             const addr = document.getElementById('user-address').value;
+            const btn = document.getElementById('sos-btn');
 
             if(!wa || !msg || !addr) return alert("Harap isi No WA, Pesan, dan Alamat!");
+            
+            // Beri feedback loading
+            btn.disabled = true;
+            btn.innerText = "MENGIRIM...";
 
             database.ref('adminReports').push({
                 message: msg,
                 whatsapp: wa,
-                address: addr, // Data alamat manual
+                address: addr,           // Alamat patokan manual
+                autoAddress: autoAddressStr, // Alamat jalan dari satelit
                 location: userCoords,
                 time: new Date().toLocaleString(),
                 status: "MENUNGGU"
             }).then(() => {
                 document.getElementById('sndSuccess').play();
-                alert("🚀 SINYAL SOS DAN ALAMAT BERHASIL TERKIRIM!");
+                alert("🚀 SINYAL SOS BERHASIL TERKIRIM!");
                 document.getElementById('user-message').value = "";
                 document.getElementById('user-address').value = "";
+                btn.disabled = false;
+                btn.innerHTML = `<span>⚠️ Kirim Sinyal SOS</span><img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert">`;
             });
         }
     </script>
