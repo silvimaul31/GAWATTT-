@@ -40,19 +40,19 @@
     </header>
 
     <div class="p-4 grid grid-cols-4 gap-3 max-w-2xl mx-auto w-full mt-2 relative z-[100]">
-        <div onclick="panggilBantuan('Ambulans')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all">
+        <div onclick="panggilBantuan('Ambulans')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all cursor-pointer">
             <div class="text-xl mb-1">🚑</div>
             <p class="text-[8px] font-black uppercase text-slate-500">Ambulans</p>
         </div>
-        <div onclick="panggilBantuan('Damkar')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all">
+        <div onclick="panggilBantuan('Damkar')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all cursor-pointer">
             <div class="text-xl mb-1">🚒</div>
             <p class="text-[8px] font-black uppercase text-slate-500">Damkar</p>
         </div>
-        <div onclick="panggilBantuan('Polisi')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all">
+        <div onclick="panggilBantuan('Polisi')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all cursor-pointer">
             <div class="text-xl mb-1">👮</div>
             <p class="text-[8px] font-black uppercase text-slate-500">Polisi</p>
         </div>
-        <div onclick="panggilBantuan('Tim SAR')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all">
+        <div onclick="panggilBantuan('Tim SAR')" class="bg-white p-3 rounded-2xl shadow-sm text-center border border-slate-100 active:scale-95 transition-all cursor-pointer">
             <div class="text-xl mb-1">🚁</div>
             <p class="text-[8px] font-black uppercase text-slate-500">Tim SAR</p>
         </div>
@@ -68,7 +68,7 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <input type="text" id="user-msg" placeholder="Tulis kondisi darurat..." class="flex-1 p-4 bg-slate-100 rounded-[20px] focus:outline-none text-sm font-bold">
+                <input type="text" id="user-msg" placeholder="Tulis kondisi darurat..." class="flex-1 p-4 bg-slate-100 rounded-[20px] focus:outline-none text-sm font-bold border-none transition-all">
                 <button onclick="sendMsg()" class="bg-navy text-white p-4 rounded-[20px] shadow-lg active:scale-95 transition-all">🚀</button>
             </div>
             <button onclick="sendSOS()" class="sos-shake w-full bg-maroon text-white py-5 rounded-[25px] font-black text-xs uppercase tracking-[0.2em] shadow-xl border-b-4 border-red-900 active:scale-95 transition-all">
@@ -78,16 +78,17 @@
     </footer>
 
     <script>
-        // 1. CONFIG FIREBASE (HARUS SAMA DENGAN ADMIN)
+        // --- CONFIGURATION ---
+        const MY_PHONE_NUMBER = "6285924179517"; // GANTI DENGAN NOMOR WA KAMU (Gunakan kode 62)
         const firebaseConfig = {
             apiKey: "PASTE_API_KEY_KAMU",
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/",
             projectId: "project-gawattt",
         };
+        
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Fungsi bantu suara
         function playTone(freq, type, duration) {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
@@ -101,41 +102,55 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 2. FUNGSI KIRIM KE FIREBASE
+        // --- GPS & FIREBASE LOGIC ---
         function pushToFirebase(pesan, status = "DARURAT") {
-            database.ref('adminReports').push({
-                message: pesan,
-                time: new Date().toLocaleString(),
-                status: status,
-                coords: "-7.1858, 108.3674", // Nanti bisa diganti GPS asli
-                location: "https://www.google.com/maps?q=-7.1858,108.3674"
-            });
+            // Kita coba ambil koordinat asli dulu
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    database.ref('adminReports').push({
+                        message: pesan,
+                        time: new Date().toLocaleString(),
+                        status: status,
+                        whatsapp: MY_PHONE_NUMBER,
+                        coords: `${lat.toFixed(4)}, ${lon.toFixed(4)}`,
+                        location: `https://www.google.com/maps?q=${lat},${lon}`
+                    });
+                }, (error) => {
+                    // Jika GPS dimatikan user, kirim lokasi default
+                    database.ref('adminReports').push({
+                        message: pesan + " (GPS Off)",
+                        time: new Date().toLocaleString(),
+                        status: status,
+                        whatsapp: MY_PHONE_NUMBER,
+                        coords: "Lokasi Tidak Diizinkan",
+                        location: "#"
+                    });
+                });
+            }
         }
 
         function panggilBantuan(jenis) {
             playTone(500, 'sine', 0.2);
-            const msg = `SAYA BUTUH BANTUAN ${jenis.toUpperCase()} SEGERA! 🚨`;
-            
-            // Tampilkan di Chat
+            const msg = `BUTUH BANTUAN ${jenis.toUpperCase()}!! 🚨`;
             document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex justify-end"><div class="bg-navy text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[80%] text-sm font-bold">${msg}</div></div>`;
-            
-            // KIRIM KE ADMIN
             pushToFirebase(msg, "URGENT");
             
             setTimeout(() => {
-                document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex gap-3 items-start"><div class="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-sm">🤖</div><div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border text-sm font-bold text-slate-700">Laporan ${jenis} telah terkirim ke Admin. Mohon tenang!</div></div>`;
-                window.scrollTo(0, document.body.scrollHeight);
+                document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex gap-3 items-start"><div class="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-sm">🤖</div><div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border text-sm font-bold text-slate-700">Laporan ${jenis} sudah masuk ke sistem pusat!</div></div>`;
+                const cb = document.getElementById('chat-box'); cb.scrollTop = cb.scrollHeight;
             }, 800);
         }
 
         function sendMsg() {
             const input = document.getElementById('user-msg');
             if(!input.value) return;
-            
             document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex justify-end"><div class="bg-navy text-white p-4 rounded-2xl rounded-tr-none shadow-md max-w-[80%] text-sm font-bold">${input.value}</div></div>`;
-            
             pushToFirebase(input.value, "PESAN");
             input.value = "";
+            const cb = document.getElementById('chat-box'); cb.scrollTop = cb.scrollHeight;
         }
 
         function sendSOS() {
@@ -146,8 +161,9 @@
             const msg = "🚨 DARURAT SOS (BY SILVI)! TOLONG SEGERA!";
             pushToFirebase(msg, "GAWAT");
             
-            document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex gap-3 items-start"><div class="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] font-black animate-bounce">🚨</div><div class="bg-red-600 text-white p-4 rounded-2xl rounded-tl-none shadow-xl text-sm font-bold">SINYAL SOS TERKIRIM! Admin sedang memantau posisi Anda.</div></div>`;
-            alert("SOS Terkirim ke Dashboard Admin!");
+            document.getElementById('chat-box').innerHTML += `<div class="chat-bubble flex gap-3 items-start"><div class="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] font-black animate-bounce">🚨</div><div class="bg-red-600 text-white p-4 rounded-2xl rounded-tl-none shadow-xl text-sm font-bold">POSISI ANDA TERKUNCI! Admin sedang memproses bantuan.</div></div>`;
+            const cb = document.getElementById('chat-box'); cb.scrollTop = cb.scrollHeight;
+            alert("SOS Terkirim! Pastikan Izin Lokasi (GPS) Aktif.");
         }
     </script>
 </body>
