@@ -3,93 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aide-Genie | Tactical Emergency System</title>
+    <title>Aide-Genie | Emergency Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; overflow-x: hidden; }
-        .maroon-header { background: linear-gradient(180deg, #450a0a 0%, #020617 100%); border-bottom: 1px solid rgba(190, 18, 60, 0.2); }
-        .tactical-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
-        .category-btn { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
-        .category-btn:hover { transform: translateY(-5px); background: #334155; border-color: #be123c; box-shadow: 0 10px 20px rgba(190, 18, 60, 0.2); }
-        .category-btn.active { background: linear-gradient(135deg, #be123c 0%, #450a0a 100%); border-color: #fb7185; box-shadow: 0 0 20px rgba(190, 18, 60, 0.4); }
-        .sos-glow { background: linear-gradient(90deg, #be123c, #991b1b, #be123c); background-size: 200% auto; animation: move-gradient 3s linear infinite; box-shadow: 0 0 20px rgba(190, 18, 60, 0.5); }
-        @keyframes move-gradient { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-        .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; display: inline-block; margin-right: 6px; }
+        :root { --maroon: #800000; --navy: #0f172a; --white: #ffffff; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--navy); 
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--white);
+            min-height: 100vh;
+        }
+
+        .category-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .category-btn:hover { background: rgba(128, 0, 0, 0.2); border-color: var(--maroon); transform: translateY(-5px); }
+        .category-btn.selected { background: var(--maroon); border-color: var(--white); box-shadow: 0 0 20px rgba(128, 0, 0, 0.5); }
+
+        .elegant-input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.3s; color: white; }
+        .elegant-input:focus { border-color: var(--maroon); outline: none; box-shadow: 0 0 15px rgba(128, 0, 0, 0.2); }
+
+        .sos-glow { background: var(--maroon); animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(128, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
+        }
+
+        /* PIN & SUCCESS OVERLAY */
+        .full-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px); z-index: 1000; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .white-modal {
+            background: white; color: var(--navy); padding: 3rem;
+            border-radius: 3rem; text-align: center; max-width: 400px; width: 100%;
+        }
+        .pin-input-field {
+            background: #f1f5f9; border: 2px solid #e2e8f0; color: var(--maroon);
+            text-align: center; font-size: 2rem; font-weight: 800;
+            width: 100%; padding: 0.8rem; border-radius: 1.5rem; outline: none;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="pb-12">
 
-    <audio id="sndClick" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
-    <audio id="sndSuccess" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3"></audio>
-
-    <header class="maroon-header p-8 rounded-b-[4rem]">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="bg-white p-3 rounded-2xl shadow-xl">
-                    <img src="https://cdn-icons-png.flaticon.com/512/11252/11252189.png" class="w-10 h-10" alt="icon">
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black uppercase tracking-tighter">AIDE-GENIE</h1>
-                    <div class="flex items-center">
-                        <span class="gps-dot"></span>
-                        <p id="gps-status" class="text-[8px] font-bold text-emerald-400 uppercase tracking-widest italic">Mencari Sinyal Satelit...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="hidden md:block text-right">
-                <p class="text-[10px] font-bold opacity-50 uppercase tracking-widest">Waktu Sistem</p>
-                <p id="clock" class="text-xs font-black">00:00:00</p>
-            </div>
+    <div id="admin-pin-overlay" class="full-overlay">
+        <div class="white-modal border-4 border-[#800000]">
+            <div class="text-4xl mb-4">🔐</div>
+            <h2 class="text-xl font-extrabold uppercase tracking-tighter mb-2">Admin Access</h2>
+            <p class="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-widest">Masukkan PIN Verifikasi</p>
+            <input type="password" id="admin-pin-input" maxlength="4" placeholder="••••" class="pin-input-field" oninput="verifyAdminPin(this.value)">
+            <button onclick="closeOverlay('admin-pin-overlay')" class="mt-6 text-[10px] font-bold text-slate-400 uppercase">Batal</button>
         </div>
-    </header>
+    </div>
 
-    <main class="max-w-5xl mx-auto w-full px-6 -mt-12 z-10 flex-grow mb-12">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div onclick="selectCategory(this, 'Ambulans', 'Darurat Medis 🚑')" class="category-btn p-6 rounded-[2.5rem] text-center group">
-                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🚑</div>
-                <p class="text-[9px] font-black uppercase text-slate-400">Ambulans</p>
+    <div id="success-overlay" class="full-overlay" style="background: rgba(128, 0, 0, 0.95);">
+        <div class="white-modal shadow-2xl">
+            <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
             </div>
-            <div onclick="selectCategory(this, 'Damkar', 'Darurat Kebakaran 🚒')" class="category-btn p-6 rounded-[2.5rem] text-center group">
-                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🚒</div>
-                <p class="text-[9px] font-black uppercase text-slate-400">Damkar</p>
+            <h2 class="text-2xl font-black text-navy uppercase leading-tight mb-2">Sinyal SOS Terkirim!</h2>
+            <p class="text-sm font-bold text-slate-500 mb-8 uppercase tracking-wide">Bantuan Sedang Diproses</p>
+            
+            <div class="bg-slate-50 p-6 rounded-2xl mb-8 text-left space-y-4 border border-slate-100">
+                <div class="flex gap-3 items-center">
+                    <span class="bg-navy text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">1</span>
+                    <p class="text-[10px] font-bold text-navy uppercase">Tetap tenang di lokasi</p>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <span class="bg-navy text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">2</span>
+                    <p class="text-[10px] font-bold text-navy uppercase">Pastikan HP tetap aktif</p>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <span class="bg-navy text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">3</span>
+                    <p class="text-[10px] font-bold text-navy uppercase">Admin akan segera menghubungi</p>
+                </div>
             </div>
-            <div onclick="selectCategory(this, 'Polisi', 'Darurat Kriminal 👮')" class="category-btn p-6 rounded-[2.5rem] text-center group">
-                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">👮</div>
-                <p class="text-[9px] font-black uppercase text-slate-400">Polisi</p>
-            </div>
-            <div onclick="selectCategory(this, 'SAR', 'Darurat Evakuasi 🛸')" class="category-btn p-6 rounded-[2.5rem] text-center group">
-                <div class="text-4xl mb-3 filter grayscale group-hover:grayscale-0 transition-all">🛸</div>
-                <p class="text-[9px] font-black uppercase text-slate-400">Tim SAR</p>
-            </div>
+
+            <button onclick="location.reload()" class="w-full bg-navy text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg">Tutup Halaman</button>
         </div>
+    </div>
 
-        <div class="mt-8 tactical-card p-8 md:p-12 rounded-[3.5rem] max-w-2xl mx-auto border-t-2 border-rose-900/50">
-            <div class="text-center mb-8">
-                <h3 class="text-lg font-black uppercase tracking-widest text-white">Laporan Kejadian</h3>
-                <p id="helper-text" class="text-[9px] text-slate-500 font-bold uppercase mt-1">Lengkapi data di bawah ini</p>
+    <nav class="sticky top-0 z-50 p-6 bg-navy/80 backdrop-blur-md border-b border-white/10">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2 rounded-xl shadow-lg text-xl">🛡️</div>
+                <h1 class="text-xl font-extrabold tracking-tighter uppercase">Aide-Genie</h1>
+            </div>
+            <div id="system-time" class="text-[10px] font-bold opacity-60 tracking-widest bg-white/10 px-3 py-1 rounded-lg"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-6 mt-10 space-y-10">
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div onclick="selectCategory('Ambulans', this)" class="category-btn p-8 rounded-[2.5rem] text-center">
+                <span class="text-4xl block mb-2">🚑</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest">Ambulans</span>
+            </div>
+            <div onclick="selectCategory('Damkar', this)" class="category-btn p-8 rounded-[2.5rem] text-center">
+                <span class="text-4xl block mb-2">🚒</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest">Damkar</span>
+            </div>
+            <div onclick="selectCategory('Polisi', this)" class="category-btn p-8 rounded-[2.5rem] text-center">
+                <span class="text-4xl block mb-2">👮</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest">Polisi</span>
+            </div>
+            <div onclick="selectCategory('SAR', this)" class="category-btn p-8 rounded-[2.5rem] text-center">
+                <span class="text-4xl block mb-2">🚁</span>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest">Tim SAR</span>
+            </div>
+        </section>
+
+        <section class="bg-white/5 backdrop-blur-md p-10 rounded-[3.5rem] border border-white/10 shadow-2xl">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black tracking-tight uppercase">Laporan SOS</h2>
+                <p id="selected-label" class="text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] mt-2 italic">Silakan Pilih Kategori Di Atas</p>
             </div>
 
-            <div class="space-y-4">
-                <input type="number" id="user-wa" placeholder="Nomor WhatsApp..." class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold">
-                <textarea id="user-message" placeholder="Jelaskan Situasi..." rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
-                <textarea id="user-address" placeholder="Alamat Manual / Patokan (Contoh: Kawali RT 2 RW 5, Depan Warung Nasi)" rows="2" class="w-full bg-black/40 p-5 rounded-2xl border border-white/5 outline-none focus:border-rose-500 transition-all text-sm font-bold"></textarea>
-            </div>
+            <div class="space-y-6">
+                <input type="number" id="whatsapp" placeholder="NOMOR WHATSAPP (08...)" class="elegant-input w-full p-6 rounded-2xl text-sm font-semibold">
+                <textarea id="message" rows="3" placeholder="APA KEADAAN DARURATNYA?" class="elegant-input w-full p-6 rounded-2xl text-sm font-semibold"></textarea>
+                <textarea id="address" rows="2" placeholder="ALAMAT / PATOKAN LOKASI" class="elegant-input w-full p-6 rounded-2xl text-sm font-semibold"></textarea>
 
-            <div class="mt-8 flex flex-col gap-3">
-                <button onclick="triggerSOS()" class="sos-glow w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <span>⚠️ Kirim Sinyal SOS</span>
-                    <img src="https://cdn-icons-png.flaticon.com/512/1042/1042312.png" class="w-5 h-5 invert" alt="rocket">
+                <button onclick="sendSOS()" id="btnSend" class="sos-glow w-full py-7 rounded-[2.5rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl transition-all active:scale-95">
+                    KIRIM SINYAL DARURAT ⚠️
                 </button>
-                <a href="admin.html" class="text-center p-3 text-[9px] font-black opacity-30 hover:opacity-100 transition-all uppercase tracking-widest">Akses Admin Panel 🔐</a>
             </div>
-        </div>
+        </section>
+
+        <p onclick="openOverlay('admin-pin-overlay')" class="text-center text-[10px] font-bold opacity-30 hover:opacity-100 hover:text-rose-400 cursor-pointer transition-all tracking-[0.4em] uppercase">
+            Admin Panel Access 🔐
+        </p>
     </main>
 
     <script>
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
+        let selectedCat = "";
+        const CORRECT_ADMIN_PIN = "1234";
+
+        function openOverlay(id) {
+            document.getElementById(id).style.display = 'flex';
+            if(id === 'admin-pin-overlay') document.getElementById('admin-pin-input').focus();
+        }
+
+        function closeOverlay(id) {
+            document.getElementById(id).style.display = 'none';
+            if(id === 'admin-pin-overlay') document.getElementById('admin-pin-input').value = '';
+        }
+
+        function verifyAdminPin(val) {
+            if (val === CORRECT_ADMIN_PIN) {
+                window.location.href = "admin.html";
+            } else if (val.length === 4) {
+                alert("PIN Salah!");
+                document.getElementById('admin-pin-input').value = '';
+            }
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('system-time').innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        function selectCategory(cat, el) {
+            selectedCat = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('selected-label').innerText = "KATEGORI: " + cat;
+            document.getElementById('selected-label').classList.replace('text-rose-400', 'text-emerald-400');
+        }
+
+        // Firebase Config
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -97,38 +191,34 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        let userCoords = "Lokasi Tidak Diketahui";
 
-        navigator.geolocation.getCurrentPosition((p) => {
-            userCoords = `${p.coords.latitude},${p.coords.longitude}`;
-            document.getElementById('gps-status').innerText = "Satelit Terkunci: " + userCoords;
-        }, () => {
-            document.getElementById('gps-status').innerText = "Gagal Mengambil GPS";
-            document.getElementById('gps-status').classList.replace('text-emerald-400', 'text-rose-500');
-        });
+        function sendSOS() {
+            const wa = document.getElementById('whatsapp').value;
+            const msg = document.getElementById('message').value;
+            const addr = document.getElementById('address').value;
+            const btn = document.getElementById('btnSend');
 
-        function selectCategory(el, name, msg) {
-            document.getElementById('sndClick').play();
-            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('user-message').value = msg;
-            document.getElementById('helper-text').innerText = "Kategori: " + name;
-        }
+            if(!selectedCat || !wa || !msg || !addr) {
+                alert("Lengkapi data laporan!"); return;
+            }
 
-        function triggerSOS() {
-            const wa = document.getElementById('user-wa').value;
-            const msg = document.getElementById('user-message').value;
-            const addr = document.getElementById('user-address').value;
-            if(!wa || !msg || !addr) return alert("Harap isi semua data!");
+            btn.innerText = "MENGIRIM...";
+            btn.disabled = true;
 
-            database.ref('adminReports').push({
-                message: msg, whatsapp: wa, address: addr,
-                location: userCoords, time: new Date().toLocaleString(), status: "MENUNGGU"
+            database.ref('adminReports/' + Date.now()).set({
+                category: selectedCat,
+                whatsapp: wa,
+                message: msg,
+                address: addr,
+                time: new Date().toLocaleString(),
+                status: "MENUNGGU",
+                location: "0,0"
             }).then(() => {
-                document.getElementById('sndSuccess').play();
-                alert("🚀 SINYAL SOS BERHASIL TERKIRIM!");
-                document.getElementById('user-message').value = "";
-                document.getElementById('user-address').value = "";
+                openOverlay('success-overlay');
+            }).catch(err => {
+                alert("Gagal mengirim! Cek koneksi.");
+                btn.innerText = "KIRIM SINYAL DARURAT ⚠️";
+                btn.disabled = false;
             });
         }
     </script>
