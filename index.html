@@ -7,79 +7,90 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --maroon: #800000; --navy: #0f172a; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--navy); color: white; margin: 0; }
+        :root { --maroon: #800000; --navy: #0f172a; --white: #ffffff; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--navy); color: var(--white); overflow-x: hidden; }
         
-        /* Glassmorphism Design */
-        .glass-header { background: rgba(128, 0, 0, 0.9); backdrop-filter: blur(10px); border-bottom: 2px solid rgba(255,255,255,0.1); }
-        .elegant-card { background: #ffffff; color: var(--navy); border-radius: 2rem; border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .elegant-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        
-        /* Stats Styling */
-        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; padding: 1.5rem; }
-        
-        /* Emergency Pulse */
-        .active-sos-border { border-left: 12px solid var(--maroon) !important; }
-        .priority-blink { animation: soft-pulse 2s infinite; background: #fffbeb !important; border: 2px solid #fbbf24 !important; }
-        @keyframes soft-pulse { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(251, 191, 36, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
+        /* Background Efek Cahaya */
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% -20%, #2e1010 0%, #0f172a 100%); z-index: -1; }
 
-        #pin-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        .input-elegant { background: white; border: 2px solid var(--maroon); color: var(--maroon); text-align: center; font-size: 2rem; font-weight: 800; width: 220px; padding: 1rem; border-radius: 1.2rem; outline: none; }
+        /* PIN Screen yang lebih Mewah */
+        #pin-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        .pin-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.1); padding: 3rem; border-radius: 3rem; backdrop-filter: blur(20px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; }
+        .pin-dot-input { background: var(--white); border: 4px solid var(--maroon); color: var(--maroon); font-size: 3rem; letter-spacing: 1rem; width: 240px; border-radius: 2rem; outline: none; transition: 0.3s; box-shadow: 0 0 20px rgba(128, 0, 0, 0.3); }
+
+        /* Dashboard Header */
+        header { background: rgba(128, 0, 0, 0.95); border-bottom: 4px solid var(--white); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* Laporan Card - Gaya Elegant White */
+        .report-card { background: var(--white); color: var(--navy); border-radius: 2.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; }
+        .report-card:hover { transform: scale(1.02) translateY(-5px); box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4); }
+        .active-emergency { border-left: 15px solid var(--maroon) !important; }
+        
+        /* Animasi Prioritas (No. 3) */
+        .urgent-mode { animation: flash-bg 1.5s infinite; border: 4px solid #facc15 !important; }
+        @keyframes flash-bg { 0%, 100% { background: #ffffff; } 50% { background: #fffbeb; } }
+
+        /* Tombol Modern */
+        .btn-action { transition: 0.3s; font-weight: 800; letter-spacing: 0.5px; border-radius: 1.2rem; }
+        .btn-action:hover { filter: brightness(1.2); transform: translateY(-2px); }
     </style>
 </head>
 <body>
+    <div class="bg-glow"></div>
 
     <div id="pin-overlay">
-        <div class="text-center space-y-8 p-10 bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-xl">
-            <div class="bg-white w-20 h-20 mx-auto rounded-[1.5rem] flex items-center justify-center shadow-2xl">
-                <span class="text-3xl">🔑</span>
+        <div class="pin-box">
+            <div class="mb-8 relative inline-block">
+                <div class="absolute inset-0 bg-maroon-500 blur-2xl opacity-20"></div>
+                <div class="bg-white w-24 h-24 rounded-3xl flex items-center justify-center border-4 border-[#800000] relative">
+                    <span class="text-4xl">🔐</span>
+                </div>
             </div>
-            <div>
-                <h2 class="text-xl font-extrabold uppercase tracking-[0.3em]">Authorized Only</h2>
-                <p class="text-slate-400 text-[10px] mt-2 font-semibold">SILAKAN MASUKKAN KODE AKSES</p>
-            </div>
-            <input type="password" id="input-pin" maxlength="4" placeholder="••••" class="input-elegant" oninput="checkPin(this.value)" autofocus>
-            <p id="pin-error" class="text-rose-500 text-[10px] font-bold uppercase hidden animate-bounce">Akses Ditolak!</p>
+            <h2 class="text-2xl font-extrabold tracking-tighter mb-2">SECURE ACCESS</h2>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8 text-center">Aide-Genie Admin Panel</p>
+            <input type="password" id="input-pin" maxlength="4" placeholder="****" class="pin-dot-input text-center" oninput="checkPin(this.value)" autofocus>
         </div>
     </div>
 
     <audio id="alarm" src="https://cdn.pixabay.com/audio/2024/04/15/audio_510488f7c5.mp3" loop></audio>
 
     <div id="admin-content" class="hidden">
-        <header class="glass-header p-5 sticky top-0 z-50 flex justify-between items-center shadow-2xl">
-            <div class="flex items-center gap-4">
-                <div class="bg-white p-2 rounded-xl text-xl">🛡️</div>
-                <div>
-                    <h1 class="text-lg font-extrabold leading-none tracking-tight">COMMAND CENTER</h1>
-                    <span class="text-[8px] font-bold text-white/60 tracking-widest uppercase">Aide-Genie Tactical System</span>
+        <header class="p-6 sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white p-2 rounded-2xl shadow-lg text-2xl">⚡</div>
+                    <div>
+                        <h1 class="text-xl font-extrabold tracking-tighter">COMMAND CENTER</h1>
+                        <p class="text-[8px] font-bold text-white/70 tracking-widest uppercase">Emergency Response Unit</p>
+                    </div>
                 </div>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="clearResolvedData()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-[9px] font-bold uppercase border border-white/20 transition-all">Clear Logs 🧹</button>
-                <button onclick="startSystem()" id="btnStart" class="bg-white text-[#800000] px-5 py-2 rounded-xl text-[9px] font-extrabold uppercase shadow-lg">Start System 🔊</button>
-                <button onclick="location.href='index.html'" class="bg-black/40 px-5 py-2 rounded-xl text-[9px] font-bold uppercase border border-white/10">Exit</button>
+                <div class="flex gap-3">
+                    <button onclick="clearResolvedData()" class="btn-action bg-black/30 hover:bg-black/50 px-5 py-2 text-[10px] border border-white/20">CLEAR DATA 🧹</button>
+                    <button onclick="startSystem()" id="btnStart" class="btn-action bg-white text-[#800000] px-6 py-2 text-[10px] shadow-xl">START AUDIO 🔊</button>
+                    <button onclick="location.href='index.html'" class="btn-action bg-maroon-900/50 px-5 py-2 text-[10px] border border-white/10">EXIT</button>
+                </div>
             </div>
         </header>
 
-        <main class="p-8 max-w-5xl mx-auto">
-            <div class="grid grid-cols-3 gap-6 mb-12">
-                <div class="stat-card">
-                    <p class="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Active Emergency</p>
-                    <p id="stat-active" class="text-4xl font-extrabold text-rose-500 mt-1">0</p>
+        <main class="p-10 max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="bg-white/5 border border-white/10 p-8 rounded-[3rem] text-center backdrop-blur-md">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Active SOS</p>
+                    <span id="stat-active" class="text-6xl font-extrabold text-rose-500">0</span>
                 </div>
-                <div class="stat-card">
-                    <p class="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Total Reports</p>
-                    <p id="stat-total" class="text-4xl font-extrabold text-white mt-1">0</p>
+                <div class="bg-white/5 border border-white/10 p-8 rounded-[3rem] text-center backdrop-blur-md">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Reports</p>
+                    <span id="stat-total" class="text-6xl font-extrabold text-white">0</span>
                 </div>
-                <div class="stat-card">
-                    <p class="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Case Resolved</p>
-                    <p id="stat-done" class="text-4xl font-extrabold text-emerald-400 mt-1">0</p>
+                <div class="bg-white/5 border border-white/10 p-8 rounded-[3rem] text-center backdrop-blur-md">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Case Resolved</p>
+                    <span id="stat-done" class="text-6xl font-extrabold text-emerald-400">0</span>
                 </div>
             </div>
 
-            <div id="report-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            <div id="report-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
         </main>
     </div>
 
@@ -88,12 +99,17 @@
 
         function checkPin(val) {
             if (val === CORRECT_PIN) {
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('admin-content').classList.remove('hidden');
+                document.getElementById('pin-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('pin-overlay').style.display = 'none';
+                    document.getElementById('admin-content').classList.remove('hidden');
+                }, 500);
             } else if (val.length === 4) {
-                document.getElementById('pin-error').classList.remove('hidden');
-                document.getElementById('input-pin').value = '';
-                setTimeout(() => { document.getElementById('pin-error').classList.add('hidden'); }, 2000);
+                document.getElementById('input-pin').classList.add('border-rose-500');
+                setTimeout(() => {
+                    document.getElementById('input-pin').value = '';
+                    document.getElementById('input-pin').classList.remove('border-rose-500');
+                }, 500);
             }
         }
 
@@ -108,13 +124,13 @@
 
         function startSystem() {
             audioStarted = true;
-            document.getElementById('btnStart').className = "bg-emerald-500 text-white px-5 py-2 rounded-xl text-[9px] font-extrabold uppercase";
-            document.getElementById('btnStart').innerText = "System Live 🟢";
+            document.getElementById('btnStart').className = "btn-action bg-emerald-500 text-white px-6 py-2 text-[10px] shadow-xl";
+            document.getElementById('btnStart').innerText = "SYSTEM LIVE 🟢";
             document.getElementById('alarm').play().then(() => { document.getElementById('alarm').pause(); });
         }
 
         function clearResolvedData() {
-            if(confirm("Hapus permanen laporan yang sudah selesai?")) {
+            if(confirm("Hapus permanen semua laporan yang sudah selesai?")) {
                 database.ref('adminReports').once('value', (snap) => {
                     snap.forEach((child) => {
                         if(child.val().status === "SELESAI") database.ref('adminReports/'+child.key).remove();
@@ -145,27 +161,25 @@
                 const urgent = !isDone && isOld;
 
                 container.innerHTML += `
-                    <div class="elegant-card p-7 ${isDone ? 'opacity-40 grayscale' : 'active-sos-border'} ${urgent ? 'priority-blink' : ''}">
-                        <div class="flex justify-between items-center mb-5">
-                            <span class="text-[8px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full ${isDone ? 'bg-slate-100 text-slate-400' : 'bg-rose-100 text-rose-700'}">
-                                ${urgent ? '⚠️ Critical Response' : (isDone ? 'Finished' : 'Emergency')}
+                    <div class="report-card p-10 ${isDone ? 'opacity-40 grayscale' : 'active-emergency'} ${urgent ? 'urgent-mode' : ''}">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="px-4 py-1.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest ${isDone ? 'bg-slate-100 text-slate-400' : 'bg-rose-600 text-white shadow-lg'}">
+                                ${urgent ? '⚠️ LAMA TIDAK DIRESPON' : (isDone ? '✓ TERATASI' : '● DARURAT BARU')}
                             </span>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase italic">${r.time}</span>
+                            <span class="text-[10px] font-bold text-slate-400 italic">${r.time}</span>
                         </div>
                         
-                        <h3 class="text-2xl font-extrabold text-navy mb-4 leading-tight italic">"${r.message}"</h3>
+                        <h3 class="text-3xl font-extrabold text-slate-900 mb-6 leading-tight uppercase tracking-tighter italic">"${r.message}"</h3>
                         
-                        <div class="space-y-3 mb-6">
-                            <div class="flex items-start gap-3">
-                                <span class="text-lg">📍</span>
-                                <p class="text-[11px] font-semibold text-slate-600 leading-relaxed uppercase">${r.address}</p>
-                            </div>
+                        <div class="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-100">
+                             <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-2">Titik Koordinat / Alamat:</p>
+                             <p class="text-sm font-bold text-slate-800 leading-relaxed uppercase">${r.address}</p>
                         </div>
 
-                        <div class="flex gap-3">
-                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-navy text-white py-4 rounded-2xl text-center text-[9px] font-extrabold uppercase hover:bg-opacity-90 transition-all shadow-md">WhatsApp</a>
-                            <a href="https://www.google.com/maps?q=${r.location}" target="_blank" class="flex-1 bg-slate-100 text-navy py-4 rounded-2xl text-center text-[9px] font-extrabold uppercase border border-slate-200 hover:bg-slate-200 transition-all">Maps</a>
-                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 bg-rose-700 text-white py-4 rounded-2xl text-[9px] font-extrabold uppercase shadow-xl hover:bg-rose-800 transition-all">Resolve</button>` : ''}
+                        <div class="flex gap-4">
+                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 btn-action bg-navy text-white py-5 text-center text-[10px] shadow-lg">HUBUNGI</a>
+                            <a href="https://www.google.com/maps?q=${r.location}" target="_blank" class="flex-1 btn-action bg-slate-100 text-navy py-5 text-center text-[10px] border border-slate-200">MAPS</a>
+                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 btn-action bg-[#800000] text-white py-5 text-[10px] shadow-2xl">RESOLVE</button>` : ''}
                         </div>
                     </div>`;
             });
