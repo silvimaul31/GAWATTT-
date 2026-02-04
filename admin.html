@@ -9,83 +9,79 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
-        .admin-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.05); transition: all 0.4s ease; }
-        .active-sos { border-left: 8px solid #be123c !important; animation: tactical-glow 2s infinite; background: linear-gradient(90deg, #180202 0%, #0f172a 100%); }
-        @keyframes tactical-glow { 0%, 100% { box-shadow: 0 0 10px rgba(190, 18, 60, 0.2); } 50% { box-shadow: 0 0 30px rgba(190, 18, 60, 0.5); } }
-        /* Style untuk Overlay PIN */
-        #pin-overlay { position: fixed; inset: 0; background: #020617; z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px); }
-        .pin-input { background: #1e293b; border: 2px solid #334155; color: white; text-align: center; font-size: 2rem; font-weight: 900; width: 200px; padding: 1rem; border-radius: 1.5rem; outline: none; transition: 0.3s; }
-        .pin-input:focus { border-color: #be123c; box-shadow: 0 0 20px rgba(190, 18, 60, 0.3); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; color: #ffffff; }
+        .admin-card { background: #ffffff; color: #0f172a; border: 1px solid rgba(15, 23, 42, 0.1); transition: all 0.4s ease; }
+        
+        /* Badge Prioritas Otomatis (No. 3) - Berkedip jika laporan > 5 menit */
+        .priority-alert { animation: alert-pulse 1.5s infinite; background: #facc15 !important; color: #000 !important; }
+        @keyframes alert-pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .active-sos { border-left: 8px solid #800000 !important; background: linear-gradient(90deg, #fdf2f2 0%, #ffffff 100%); }
+        #pin-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px); }
+        .pin-input { background: #ffffff; border: 2px solid #800000; color: #800000; text-align: center; font-size: 2rem; font-weight: 900; width: 200px; padding: 1rem; border-radius: 1.5rem; outline: none; }
+        header { background: #800000; color: #ffffff; border-bottom: 4px solid #ffffff; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #800000; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="pin-overlay">
         <div class="text-center space-y-6">
-            <div class="bg-rose-900/20 w-20 h-20 mx-auto rounded-3xl flex items-center justify-center border border-rose-500/30">
+            <div class="bg-white w-20 h-20 mx-auto rounded-3xl flex items-center justify-center border-2 border-maroon-600 shadow-xl">
                 <span class="text-3xl">🔐</span>
             </div>
-            <div>
-                <h2 class="text-xl font-black uppercase tracking-widest">Admin Access</h2>
-                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Masukkan PIN Keamanan</p>
-            </div>
-            <input type="password" id="input-pin" maxlength="4" placeholder="****" class="pin-input" oninput="checkPin(this.value)">
-            <p id="pin-error" class="text-rose-500 text-[10px] font-bold uppercase hidden">PIN Salah, Akses Ditolak!</p>
+            <input type="password" id="input-pin" maxlength="4" placeholder="****" class="pin-input" oninput="checkPin(this.value)" autofocus>
+            <p id="pin-error" class="text-rose-400 text-[10px] font-bold uppercase hidden">Akses Ditolak!</p>
         </div>
     </div>
 
     <audio id="alarm" src="https://cdn.pixabay.com/audio/2024/04/15/audio_510488f7c5.mp3" loop></audio>
 
     <div id="admin-content" class="hidden">
-        <header class="bg-slate-900/50 backdrop-blur-lg p-6 flex justify-between items-center border-b border-white/5 sticky top-0 z-50">
+        <header class="p-6 flex justify-between items-center sticky top-0 z-50 shadow-2xl">
             <div class="flex items-center gap-4">
-                <div class="bg-rose-900 p-3 rounded-2xl text-2xl animate-pulse">🚨</div>
-                <div>
-                    <h1 class="text-xl font-black uppercase tracking-tighter">Command Center</h1>
-                    <p class="text-[8px] font-bold text-rose-500 tracking-[0.3em] uppercase">Tactical Monitoring Active</p>
-                </div>
+                <div class="bg-white p-2 rounded-xl text-2xl shadow-lg">🚨</div>
+                <h1 class="text-xl font-black uppercase tracking-tighter">Command Center</h1>
             </div>
             <div class="flex gap-3">
-                <button onclick="startSystem()" id="btnStart" class="bg-emerald-600 px-6 py-2 rounded-xl text-[10px] font-black uppercase">Start Audio 🔊</button>
-                <button onclick="location.href='index.html'" class="bg-white/5 px-6 py-2 rounded-xl text-[10px] font-black uppercase border border-white/10">Exit</button>
+                <button onclick="clearResolvedData()" class="bg-amber-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-md hover:bg-amber-600">Clear Resolved 🧹</button>
+                <button onclick="startSystem()" id="btnStart" class="bg-white text-[#800000] px-4 py-2 rounded-xl text-[9px] font-black uppercase shadow-md">Start Audio 🔊</button>
+                <button onclick="location.href='index.html'" class="bg-navy-900/20 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase border border-white/30">Exit</button>
             </div>
         </header>
 
         <main class="p-8 max-w-4xl mx-auto space-y-8">
             <div class="grid grid-cols-3 gap-6 text-center">
-                <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-rose-900">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active SOS</p>
-                    <p id="stat-active" class="text-5xl font-black text-rose-500 mt-2">0</p>
+                <div class="admin-card p-6 rounded-[2rem] border-t-4 border-[#800000]">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Active SOS</p>
+                    <p id="stat-active" class="text-4xl font-black text-[#800000]">0</p>
                 </div>
-                <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-slate-700">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Reports</p>
-                    <p id="stat-total" class="text-5xl font-black text-white mt-2">0</p>
+                <div class="admin-card p-6 rounded-[2rem] border-t-4 border-slate-300">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Total</p>
+                    <p id="stat-total" class="text-4xl font-black text-slate-800">0</p>
                 </div>
-                <div class="admin-card p-8 rounded-[2.5rem] border-b-4 border-emerald-900">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolved</p>
-                    <p id="stat-done" class="text-5xl font-black text-emerald-500 mt-2">0</p>
+                <div class="admin-card p-6 rounded-[2rem] border-t-4 border-emerald-600">
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Resolved</p>
+                    <p id="stat-done" class="text-4xl font-black text-emerald-600">0</p>
                 </div>
             </div>
+
             <div id="report-container" class="space-y-4 pt-4"></div>
         </main>
     </div>
 
     <script>
-        // KONFIGURASI PIN
-        const CORRECT_PIN = "1234"; // SILVI: Ganti angka ini dengan PIN rahasiamu!
+        const CORRECT_PIN = "1234"; 
 
         function checkPin(val) {
-            const errorText = document.getElementById('pin-error');
-            if (val.length === 4) {
-                if (val === CORRECT_PIN) {
-                    document.getElementById('pin-overlay').style.display = 'none';
-                    document.getElementById('admin-content').classList.remove('hidden');
-                } else {
-                    errorText.classList.remove('hidden');
-                    document.getElementById('input-pin').value = '';
-                    setTimeout(() => { errorText.classList.add('hidden'); }, 2000);
-                }
+            if (val === CORRECT_PIN) {
+                document.getElementById('pin-overlay').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+            } else if (val.length === 4) {
+                document.getElementById('pin-error').classList.remove('hidden');
+                document.getElementById('input-pin').value = '';
+                setTimeout(() => { document.getElementById('pin-error').classList.add('hidden'); }, 2000);
             }
         }
 
@@ -104,44 +100,59 @@
             document.getElementById('alarm').play().then(() => { document.getElementById('alarm').pause(); });
         }
 
+        // Fitur No. 1: Fungsi Hapus Data yang sudah Selesai
+        function clearResolvedData() {
+            if(confirm("Hapus semua laporan yang sudah selesai?")) {
+                database.ref('adminReports').once('value', (snap) => {
+                    snap.forEach((child) => {
+                        if(child.val().status === "SELESAI") database.ref('adminReports/'+child.key).remove();
+                    });
+                });
+            }
+        }
+
         database.ref('adminReports').on('value', (snapshot) => {
             const data = snapshot.val();
             const container = document.getElementById('report-container');
-            const count = data ? Object.keys(data).length : 0;
+            const reports = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
             
-            if(count > lastCount && audioStarted) { 
-                document.getElementById('alarm').play(); 
-                setTimeout(() => { document.getElementById('alarm').pause(); }, 8000); 
-            }
-            lastCount = count;
-            container.innerHTML = "";
-
-            if(!data) {
-                container.innerHTML = `<div class="p-20 text-center opacity-20 font-black border-2 border-dashed border-white/5 rounded-[3rem]">SCANNING...</div>`;
-                return;
-            }
-
-            const reports = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             document.getElementById('stat-active').innerText = reports.filter(r => r.status === "MENUNGGU").length;
             document.getElementById('stat-total').innerText = reports.length;
             document.getElementById('stat-done').innerText = reports.filter(r => r.status === "SELESAI").length;
 
+            if(reports.length > lastCount && audioStarted) { 
+                document.getElementById('alarm').play(); 
+                setTimeout(() => { document.getElementById('alarm').pause(); }, 8000); 
+            }
+            lastCount = reports.length;
+            container.innerHTML = "";
+
             reports.forEach(r => {
                 const isDone = r.status === "SELESAI";
+                
+                // Fitur No. 3: Logika Prioritas (Cek jika sudah > 5 menit)
+                const reportTime = new Date(r.time).getTime();
+                const now = new Date().getTime();
+                const isOld = (now - reportTime) > (5 * 60 * 1000); // 5 Menit
+                const priorityClass = (!isDone && isOld) ? 'priority-alert' : '';
+
                 container.innerHTML += `
-                    <div class="admin-card p-8 rounded-[2.5rem] ${isDone ? 'opacity-40 grayscale-[0.5]' : 'active-sos'}">
-                        <div class="flex justify-between items-center mb-6">
-                            <span class="px-4 py-1 rounded-full text-[9px] font-black uppercase ${isDone ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500 text-white animate-pulse'}">
-                                ${isDone ? '✓ Handled' : '● Emergency'}
+                    <div class="admin-card p-6 rounded-[2.5rem] ${isDone ? 'opacity-50 grayscale' : 'active-sos'} shadow-xl">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-4 py-1 rounded-full text-[8px] font-black uppercase ${priorityClass || (isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-[#800000] text-white')}">
+                                ${!isDone && isOld ? '⚠️ Respon Lambat!' : (isDone ? '✓ Handled' : '● New Report')}
                             </span>
-                            <span class="text-[10px] font-bold text-slate-500 bg-black/40 px-3 py-1 rounded-lg">${r.time}</span>
+                            <span class="text-[9px] font-bold text-slate-400">${r.time}</span>
                         </div>
-                        <h3 class="text-2xl font-black mb-4 leading-tight italic">"${r.message}"</h3>
-                        <p class="text-xs text-slate-400 mb-6 italic">📍 ${r.address}</p>
-                        <div class="flex gap-4">
-                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-white/5 p-5 rounded-2xl text-center text-[10px] font-black uppercase border border-white/5 transition-all hover:bg-white/10">Contact 💬</a>
-                            <a href="http://maps.google.com/?q=${r.location}" target="_blank" class="flex-1 bg-white/5 p-5 rounded-2xl text-center text-[10px] font-black uppercase border border-white/5 transition-all hover:bg-white/10">Maps 🗺️</a>
-                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 bg-rose-700 p-5 rounded-2xl text-[10px] font-black uppercase">Resolve ✓</button>` : ''}
+                        <h3 class="text-xl font-black mb-2 italic">"${r.message}"</h3>
+                        <div class="bg-slate-50 p-4 rounded-2xl mb-4 border border-slate-100">
+                             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Lokasi Kejadian:</p>
+                             <p class="text-xs font-bold text-slate-800">${r.address}</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-navy-50 text-[#0f172a] p-4 rounded-xl text-center text-[9px] font-black uppercase border border-slate-200">WhatsApp</a>
+                            <a href="https://www.google.com/maps?q=${r.location}" target="_blank" class="flex-1 bg-navy-50 text-[#0f172a] p-4 rounded-xl text-center text-[9px] font-black uppercase border border-slate-200">Maps</a>
+                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 bg-[#800000] text-white p-4 rounded-xl text-[9px] font-black uppercase">Resolve</button>` : ''}
                         </div>
                     </div>`;
             });
