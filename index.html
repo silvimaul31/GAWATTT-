@@ -78,6 +78,8 @@
 </head>
 <body>
 
+    <audio id="sndClick" src="https://www.soundjay.com/buttons/sounds/beep-07a.mp3" preload="auto"></audio>
+
     <div id="admin-pin-overlay" class="full-overlay">
         <div class="white-modal border-t-8 border-[#800000]">
             <h2 class="text-xl font-extrabold uppercase mb-4">Admin Access</h2>
@@ -188,8 +190,11 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // FUNGSI UTAMA SOS DENGAN GPS
+        // FUNGSI UTAMA SOS DENGAN GPS & SUARA
         function sendSOS() {
+            // Mainkan suara beep konfirmasi
+            document.getElementById('sndClick').play();
+
             const wa = document.getElementById('whatsapp').value;
             const msg = document.getElementById('message').value;
             const addr = document.getElementById('address').value;
