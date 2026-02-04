@@ -3,116 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Center | Aide-Genie</title>
+    <title>Aide-Genie | Emergency Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --maroon: #800000; --navy: #0f172a; --white: #ffffff; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--navy); color: var(--white); overflow-x: hidden; }
-        
-        /* Background Efek Cahaya */
-        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% -20%, #2e1010 0%, #0f172a 100%); z-index: -1; }
-
-        /* PIN Screen yang lebih Mewah */
-        #pin-overlay { position: fixed; inset: 0; background: var(--navy); z-index: 1000; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
-        .pin-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.1); padding: 3rem; border-radius: 3rem; backdrop-filter: blur(20px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; }
-        .pin-dot-input { background: var(--white); border: 4px solid var(--maroon); color: var(--maroon); font-size: 3rem; letter-spacing: 1rem; width: 240px; border-radius: 2rem; outline: none; transition: 0.3s; box-shadow: 0 0 20px rgba(128, 0, 0, 0.3); }
-
-        /* Dashboard Header */
-        header { background: rgba(128, 0, 0, 0.95); border-bottom: 4px solid var(--white); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-
-        /* Laporan Card - Gaya Elegant White */
-        .report-card { background: var(--white); color: var(--navy); border-radius: 2.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; }
-        .report-card:hover { transform: scale(1.02) translateY(-5px); box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4); }
-        .active-emergency { border-left: 15px solid var(--maroon) !important; }
-        
-        /* Animasi Prioritas (No. 3) */
-        .urgent-mode { animation: flash-bg 1.5s infinite; border: 4px solid #facc15 !important; }
-        @keyframes flash-bg { 0%, 100% { background: #ffffff; } 50% { background: #fffbeb; } }
-
-        /* Tombol Modern */
-        .btn-action { transition: 0.3s; font-weight: 800; letter-spacing: 0.5px; border-radius: 1.2rem; }
-        .btn-action:hover { filter: brightness(1.2); transform: translateY(-2px); }
-    </style>
-</head>
-<body>
-    <div class="bg-glow"></div>
-
-    <div id="pin-overlay">
-        <div class="pin-box">
-            <div class="mb-8 relative inline-block">
-                <div class="absolute inset-0 bg-maroon-500 blur-2xl opacity-20"></div>
-                <div class="bg-white w-24 h-24 rounded-3xl flex items-center justify-center border-4 border-[#800000] relative">
-                    <span class="text-4xl">🔐</span>
-                </div>
-            </div>
-            <h2 class="text-2xl font-extrabold tracking-tighter mb-2">SECURE ACCESS</h2>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-8 text-center">Aide-Genie Admin Panel</p>
-            <input type="password" id="input-pin" maxlength="4" placeholder="****" class="pin-dot-input text-center" oninput="checkPin(this.value)" autofocus>
-        </div>
-    </div>
-
-    <audio id="alarm" src="https://cdn.pixabay.com/audio/2024/04/15/audio_510488f7c5.mp3" loop></audio>
-
-    <div id="admin-content" class="hidden">
-        <header class="p-6 sticky top-0 z-50">
-            <div class="max-w-6xl mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <div class="bg-white p-2 rounded-2xl shadow-lg text-2xl">⚡</div>
-                    <div>
-                        <h1 class="text-xl font-extrabold tracking-tighter">COMMAND CENTER</h1>
-                        <p class="text-[8px] font-bold text-white/70 tracking-widest uppercase">Emergency Response Unit</p>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="clearResolvedData()" class="btn-action bg-black/30 hover:bg-black/50 px-5 py-2 text-[10px] border border-white/20">CLEAR DATA 🧹</button>
-                    <button onclick="startSystem()" id="btnStart" class="btn-action bg-white text-[#800000] px-6 py-2 text-[10px] shadow-xl">START AUDIO 🔊</button>
-                    <button onclick="location.href='index.html'" class="btn-action bg-maroon-900/50 px-5 py-2 text-[10px] border border-white/10">EXIT</button>
-                </div>
-            </div>
-        </header>
-
-        <main class="p-10 max-w-6xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <div class="bg-white/5 border border-white/10 p-8 rounded-[3rem] text-center backdrop-blur-md">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Active SOS</p>
-                    <span id="stat-active" class="text-6xl font-extrabold text-rose-500">0</span>
-                </div>
-                <div class="bg-white/5 border border-white/10 p-8 rounded-[3rem] text-center backdrop-blur-md">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Reports</p>
-                    <span id="stat-total" class="text-6xl font-extrabold text-white">0</span>
-                </div>
-                <div class="bg-white/5 border border-white/10 p-8 rounded-[3rem] text-center backdrop-blur-md">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Case Resolved</p>
-                    <span id="stat-done" class="text-6xl font-extrabold text-emerald-400">0</span>
-                </div>
-            </div>
-
-            <div id="report-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
-        </main>
-    </div>
-
-    <script>
-        const CORRECT_PIN = "1234"; 
-
-        function checkPin(val) {
-            if (val === CORRECT_PIN) {
-                document.getElementById('pin-overlay').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('pin-overlay').style.display = 'none';
-                    document.getElementById('admin-content').classList.remove('hidden');
-                }, 500);
-            } else if (val.length === 4) {
-                document.getElementById('input-pin').classList.add('border-rose-500');
-                setTimeout(() => {
-                    document.getElementById('input-pin').value = '';
-                    document.getElementById('input-pin').classList.remove('border-rose-500');
-                }, 500);
-            }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--navy); 
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--white);
+            min-height: 100vh;
         }
 
+        /* Nav & Logo */
+        .glass-nav { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        /* Category Cards */
+        .category-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .category-btn:hover {
+            background: rgba(128, 0, 0, 0.2);
+            border-color: var(--maroon);
+            transform: translateY(-5px);
+        }
+        .category-btn.selected {
+            background: var(--maroon);
+            border-color: var(--white);
+            box-shadow: 0 0 20px rgba(128, 0, 0, 0.5);
+        }
+
+        /* Input Styling */
+        .elegant-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+        .elegant-input:focus {
+            border-color: var(--maroon);
+            background: rgba(255, 255, 255, 0.05);
+            outline: none;
+            box-shadow: 0 0 15px rgba(128, 0, 0, 0.2);
+        }
+
+        /* SOS Button */
+        .sos-glow {
+            background: var(--maroon);
+            box-shadow: 0 0 30px rgba(128, 0, 0, 0.6);
+            transition: all 0.3s;
+            animation: pulse-red 2s infinite;
+        }
+        .sos-glow:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 50px rgba(128, 0, 0, 0.8);
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(128, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(128, 0, 0, 0); }
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="pb-12">
+
+    <nav class="glass-nav sticky top-0 z-50 p-4">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2 rounded-xl shadow-lg">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1022/1022313.png" class="w-6 h-6" alt="logo">
+                </div>
+                <h1 class="text-xl font-extrabold tracking-tighter">AIDE-GENIE</h1>
+            </div>
+            <div id="system-time" class="text-[10px] font-bold opacity-60 bg-white/10 px-3 py-1 rounded-lg"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-6 mt-10 space-y-10">
+        
+        <section class="text-center">
+            <h2 class="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-6">Pilih Layanan Bantuan</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div onclick="selectCategory('Ambulans', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
+                    <span class="text-3xl">🚑</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Ambulans</span>
+                </div>
+                <div onclick="selectCategory('Damkar', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
+                    <span class="text-3xl">🚒</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Damkar</span>
+                </div>
+                <div onclick="selectCategory('Polisi', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
+                    <span class="text-3xl">👮</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Polisi</span>
+                </div>
+                <div onclick="selectCategory('Tim SAR', this)" class="category-btn p-6 rounded-[2rem] flex flex-col items-center gap-3">
+                    <span class="text-3xl">🛸</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest">Tim SAR</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-container p-8 rounded-[3rem] shadow-2xl">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-extrabold tracking-tight">LAPORAN KEJADIAN</h2>
+                <p id="selected-label" class="text-[10px] font-bold text-maroon-400 uppercase tracking-widest mt-1">Silakan pilih kategori di atas</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-bold uppercase ml-4 mb-2 block opacity-50">Nomor WhatsApp</label>
+                    <input type="number" id="whatsapp" placeholder="0812..." class="elegant-input w-full p-5 rounded-2xl text-sm font-semibold">
+                </div>
+                
+                <div>
+                    <label class="text-[10px] font-bold uppercase ml-4 mb-2 block opacity-50">Jelaskan Situasi</label>
+                    <textarea id="message" rows="3" placeholder="Apa yang terjadi?..." class="elegant-input w-full p-5 rounded-2xl text-sm font-semibold"></textarea>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold uppercase ml-4 mb-2 block opacity-50">Alamat Manual / Patokan</label>
+                    <textarea id="address" rows="2" placeholder="Contoh: Depan Warung Nasi RT 02..." class="elegant-input w-full p-5 rounded-2xl text-sm font-semibold"></textarea>
+                </div>
+
+                <button onclick="sendSOS()" class="sos-glow w-full py-6 rounded-[2rem] text-sm font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+                    ⚠️ Kirim Sinyal SOS ⚠️
+                </button>
+            </div>
+        </section>
+
+        <p onclick="location.href='admin.html'" class="text-center text-[10px] font-bold opacity-30 hover:opacity-100 cursor-pointer transition-all">AKSES ADMIN PANEL 🔐</p>
+    </main>
+
+    <script>
+        let selectedCat = "";
+
+        // Update Waktu
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('system-time').innerText = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+        }, 1000);
+
+        function selectCategory(cat, el) {
+            selectedCat = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('selected-label').innerText = "KATEGORI: " + cat;
+        }
+
+        // Firebase Config (Samakan dengan punyamu)
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -120,72 +169,31 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        let lastCount = 0; let audioStarted = false;
 
-        function startSystem() {
-            audioStarted = true;
-            document.getElementById('btnStart').className = "btn-action bg-emerald-500 text-white px-6 py-2 text-[10px] shadow-xl";
-            document.getElementById('btnStart').innerText = "SYSTEM LIVE 🟢";
-            document.getElementById('alarm').play().then(() => { document.getElementById('alarm').pause(); });
-        }
+        function sendSOS() {
+            const wa = document.getElementById('whatsapp').value;
+            const msg = document.getElementById('message').value;
+            const addr = document.getElementById('address').value;
 
-        function clearResolvedData() {
-            if(confirm("Hapus permanen semua laporan yang sudah selesai?")) {
-                database.ref('adminReports').once('value', (snap) => {
-                    snap.forEach((child) => {
-                        if(child.val().status === "SELESAI") database.ref('adminReports/'+child.key).remove();
-                    });
-                });
+            if(!selectedCat || !wa || !msg || !addr) {
+                alert("Lengkapi semua data dan pilih kategori!");
+                return;
             }
-        }
 
-        database.ref('adminReports').on('value', (snapshot) => {
-            const data = snapshot.val();
-            const container = document.getElementById('report-container');
-            const reports = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
-            
-            document.getElementById('stat-active').innerText = reports.filter(r => r.status === "MENUNGGU").length;
-            document.getElementById('stat-total').innerText = reports.length;
-            document.getElementById('stat-done').innerText = reports.filter(r => r.status === "SELESAI").length;
-
-            if(reports.length > lastCount && audioStarted) { 
-                document.getElementById('alarm').play(); 
-                setTimeout(() => { document.getElementById('alarm').pause(); }, 8000); 
-            }
-            lastCount = reports.length;
-            container.innerHTML = "";
-
-            reports.forEach(r => {
-                const isDone = r.status === "SELESAI";
-                const isOld = (new Date().getTime() - new Date(r.time).getTime()) > (5 * 60 * 1000); 
-                const urgent = !isDone && isOld;
-
-                container.innerHTML += `
-                    <div class="report-card p-10 ${isDone ? 'opacity-40 grayscale' : 'active-emergency'} ${urgent ? 'urgent-mode' : ''}">
-                        <div class="flex justify-between items-center mb-6">
-                            <span class="px-4 py-1.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest ${isDone ? 'bg-slate-100 text-slate-400' : 'bg-rose-600 text-white shadow-lg'}">
-                                ${urgent ? '⚠️ LAMA TIDAK DIRESPON' : (isDone ? '✓ TERATASI' : '● DARURAT BARU')}
-                            </span>
-                            <span class="text-[10px] font-bold text-slate-400 italic">${r.time}</span>
-                        </div>
-                        
-                        <h3 class="text-3xl font-extrabold text-slate-900 mb-6 leading-tight uppercase tracking-tighter italic">"${r.message}"</h3>
-                        
-                        <div class="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-100">
-                             <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-2">Titik Koordinat / Alamat:</p>
-                             <p class="text-sm font-bold text-slate-800 leading-relaxed uppercase">${r.address}</p>
-                        </div>
-
-                        <div class="flex gap-4">
-                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 btn-action bg-navy text-white py-5 text-center text-[10px] shadow-lg">HUBUNGI</a>
-                            <a href="https://www.google.com/maps?q=${r.location}" target="_blank" class="flex-1 btn-action bg-slate-100 text-navy py-5 text-center text-[10px] border border-slate-200">MAPS</a>
-                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 btn-action bg-[#800000] text-white py-5 text-[10px] shadow-2xl">RESOLVE</button>` : ''}
-                        </div>
-                    </div>`;
+            const reportId = Date.now();
+            database.ref('adminReports/' + reportId).set({
+                category: selectedCat,
+                whatsapp: wa,
+                message: msg,
+                address: addr,
+                time: new Date().toLocaleString(),
+                status: "MENUNGGU",
+                location: "0,0" // Bisa ditambah Geolocation API nanti
+            }).then(() => {
+                alert("🚨 SINYAL TERKIRIM! Mohon tetap tenang, bantuan sedang diproses.");
+                location.reload();
             });
-        });
-
-        function markDone(id) { database.ref('adminReports/'+id).update({status: "SELESAI"}); }
+        }
     </script>
 </body>
 </html>
