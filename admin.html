@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/emergency_it_is_happening.ogg" preload="auto"></audio>
+    <audio id="alarm" src="https://cdn.pixabay.com/audio/2021/08/09/audio_03d9724a29.mp3" preload="auto"></audio>
 
     <div id="admin-content" class="hidden">
         <header class="p-4 sticky top-0 z-50">
@@ -132,14 +132,9 @@
             document.getElementById('btnAudio').classList.replace('text-slate-500', 'text-white');
             document.getElementById('btnAudio').innerText = "Suara Aktif 🟢";
             const alarm = document.getElementById('alarm');
-            // Pancing audio agar browser mengizinkan autoplay
-            alarm.play().then(() => {
-                alarm.pause();
-                alarm.currentTime = 0;
-            }).catch(e => console.log("Audio pancingan gagal:", e));
+            alarm.play().then(() => alarm.pause());
         }
 
-        // Firebase Configuration
         const firebaseConfig = { 
             apiKey: "PASTE_API_KEY_KAMU", 
             databaseURL: "https://project-gawattt-default-rtdb.asia-southeast1.firebasedatabase.app/", 
@@ -148,21 +143,15 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Listen Data
         database.ref('adminReports').on('value', (snapshot) => {
             const data = snapshot.val();
             const container = document.getElementById('report-container');
             const reports = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
             
-            // Hitung hanya yang statusnya MENUNGGU untuk memicu alarm
-            const activeReports = reports.filter(r => r.status === "MENUNGGU").length;
-
-            // Update Stats
-            document.getElementById('stat-active').innerText = activeReports;
+            document.getElementById('stat-active').innerText = reports.filter(r => r.status === "MENUNGGU").length;
             document.getElementById('stat-total').innerText = reports.length;
             document.getElementById('stat-done').innerText = reports.filter(r => r.status === "SELESAI").length;
 
-            // Logika Suara Alarm & Getar (Hanya jika ada laporan baru MASUK)
             if(reports.length > lastCount && audioAllowed) {
                 const alarm = document.getElementById('alarm');
                 alarm.currentTime = 0; 
@@ -172,8 +161,7 @@
                     navigator.vibrate([500, 200, 500, 200, 500]);
                 }
 
-                // Berhenti otomatis setelah 5 detik
-                setTimeout(() => { alarm.pause(); }, 5000);
+                setTimeout(() => { alarm.pause(); }, 7000); // Sirine bunyi selama 7 detik
             }
             lastCount = reports.length;
 
