@@ -10,33 +10,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; }
-        .admin-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .status-pulse { animation: pulse-red 2s infinite; }
+        .admin-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
+        .status-pulse { 
+            animation: pulse-red 2s infinite; 
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            background: rgba(239, 68, 68, 0.02);
+        }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        
+        /* Tambahan efek hover agar dashboard terasa hidup */
+        .admin-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body class="min-h-screen">
 
     <header class="bg-slate-950 p-6 flex justify-between items-center border-b border-white/5 sticky top-0 z-50">
         <div class="flex items-center gap-4">
-            <div class="bg-red-700 p-3 rounded-2xl text-2xl">👩‍⚕️</div>
-            <h1 class="text-xl font-black uppercase tracking-tighter text-white">Command Center</h1>
+            <div class="bg-red-700 p-3 rounded-2xl text-2xl shadow-lg shadow-red-900/20">👩‍⚕️</div>
+            <div>
+                <h1 class="text-xl font-black uppercase tracking-tighter text-white">Command Center</h1>
+                <p class="text-[8px] font-bold text-green-500 tracking-[0.3em] uppercase animate-pulse">● System Connected</p>
+            </div>
         </div>
-        <button onclick="location.href='index.html'" class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-white/10">Exit</button>
+        <button onclick="location.href='index.html'" class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase border border-white/10 hover:bg-red-500/20 transition-all">Exit</button>
     </header>
 
     <main class="p-8 max-w-4xl mx-auto space-y-8">
         <div class="grid grid-cols-3 gap-4">
             <div class="admin-card p-6 rounded-3xl text-center border-b-4 border-blue-500">
-                <p class="text-[10px] font-black text-slate-500 uppercase">Total</p>
-                <p id="stat-total" class="text-2xl font-black">0</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total</p>
+                <p id="stat-total" class="text-2xl font-black text-white">0</p>
             </div>
             <div class="admin-card p-6 rounded-3xl text-center border-b-4 border-red-500">
-                <p class="text-[10px] font-black text-slate-500 uppercase">Active</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active</p>
                 <p id="stat-active" class="text-2xl font-black text-red-500">0</p>
             </div>
             <div class="admin-card p-6 rounded-3xl text-center border-b-4 border-green-500">
-                <p class="text-[10px] font-black text-slate-500 uppercase">Done</p>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Done</p>
                 <p id="stat-done" class="text-2xl font-black text-green-500">0</p>
             </div>
         </div>
@@ -59,7 +69,7 @@
             container.innerHTML = "";
             
             if(!data) {
-                container.innerHTML = `<div class="p-10 text-center opacity-30 font-black">SATELLITE IDLE...</div>`;
+                container.innerHTML = `<div class="p-20 text-center opacity-20 font-black tracking-widest border-2 border-dashed border-white/10 rounded-[3rem]">SATELLITE IDLE...</div>`;
                 return;
             }
 
@@ -70,16 +80,47 @@
 
             reports.forEach(r => {
                 const isDone = r.status === "SELESAI";
+                // Pesan otomatis untuk admin
+                const templateMsg = encodeURIComponent("Tim bantuan Aide-Genie sudah menerima laporan Anda dan sedang meluncur! Mohon tetap tenang.");
+
                 container.innerHTML += `
                     <div class="admin-card p-8 rounded-[2.5rem] relative ${isDone?'opacity-40':'status-pulse'}">
-                        <div class="flex justify-between mb-4">
-                            <span class="text-[9px] font-black px-3 py-1 border rounded-full ${isDone?'border-green-500 text-green-500':'border-red-500 text-red-500'}">${r.status}</span>
-                            <span class="text-[9px] font-bold text-slate-500">${r.time}</span>
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="text-[9px] font-black px-4 py-1.5 border rounded-full ${isDone?'border-green-500 text-green-500 bg-green-500/10':'border-red-500 text-red-500 bg-red-500/10'} uppercase tracking-widest">
+                                ● ${r.status}
+                            </span>
+                            <span class="text-[9px] font-bold text-slate-500 bg-black/30 px-3 py-1 rounded-lg">${r.time}</span>
                         </div>
-                        <h3 class="text-xl font-black mb-6">"${r.message}"</h3>
-                        <div class="flex gap-3">
-                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex-1 bg-green-500/10 p-4 rounded-2xl text-center border border-green-500/20 text-[10px] font-black text-green-500 uppercase">Chat WA 💬</a>
-                            ${!isDone ? `<button onclick="markDone('${r.id}')" class="flex-1 bg-white text-black p-4 rounded-2xl text-[10px] font-black uppercase">Selesaikan ✅</button>` : ''}
+                        <h3 class="text-xl font-black mb-8 leading-tight tracking-tight">"${r.message}"</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <a href="${r.location || '#'}" target="_blank" class="flex items-center gap-4 bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20 hover:bg-blue-500/20 transition-all">
+                                <div class="bg-blue-600 p-2 rounded-xl">📍</div>
+                                <div>
+                                    <p class="text-[8px] font-black text-blue-400 uppercase">Lokasi</p>
+                                    <p class="text-[10px] font-bold">LIHAT DI PETA</p>
+                                </div>
+                            </a>
+                            <a href="https://wa.me/${r.whatsapp}" target="_blank" class="flex items-center gap-4 bg-green-500/10 p-4 rounded-2xl border border-green-500/20 hover:bg-green-500/20 transition-all">
+                                <div class="bg-green-600 p-2 rounded-xl">💬</div>
+                                <div>
+                                    <p class="text-[8px] font-black text-green-400 uppercase">WhatsApp</p>
+                                    <p class="text-[10px] font-bold">${r.whatsapp}</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="flex flex-col gap-3">
+                            ${!isDone ? `
+                                <a href="https://wa.me/${r.whatsapp}?text=${templateMsg}" target="_blank" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all shadow-lg shadow-blue-900/20">
+                                    ⚡ Balas Cepat: "Tim Meluncur!"
+                                </a>
+                                <button onclick="markDone('${r.id}')" class="w-full bg-white text-black p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-white transition-all">
+                                    Selesaikan Laporan ✅
+                                </button>
+                            ` : `
+                                <div class="text-center text-[10px] font-black text-green-500 uppercase tracking-widest py-2">Laporan Telah Ditangani</div>
+                            `}
                         </div>
                     </div>
                 `;
